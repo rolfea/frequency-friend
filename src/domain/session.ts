@@ -6,16 +6,22 @@ export interface Session {
   queue: SpelledNote[];
   currentIndex: number;
   stats: { correct: number; total: number };
+  endTime: Date | null;
 }
 
 export function createSession(config: Config, progress: Progress, now: Date): Session {
   const pool = notePool(config);
   const queue = pickDueNotes(pool, progress, now, config.cardsPerSession);
+  const endTime =
+    config.sessionMode === 'minutes'
+      ? new Date(now.getTime() + config.sessionDurationMinutes * 60_000)
+      : null;
   return {
     config,
     queue,
     currentIndex: 0,
     stats: { correct: 0, total: 0 },
+    endTime,
   };
 }
 
@@ -60,4 +66,11 @@ export function answer(
     wasCorrect,
     correctPitchClass: note.pitchClass,
   };
+}
+
+export function formatRemainingTime(remainingMs: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }

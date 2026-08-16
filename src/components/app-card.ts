@@ -1,5 +1,5 @@
 import type { Config, PitchClass, SpelledNote } from '../domain/note.js';
-import { createSession, currentNote, answer } from '../domain/session.js';
+import { createSession, currentNote, answer, formatRemainingTime } from '../domain/session.js';
 import { loadConfig, loadProgress, saveConfig, saveProgress } from '../storage.js';
 import { pitchClassToName } from '../domain/note.js';
 import type StaffDisplay from './staff-display.js';
@@ -13,10 +13,15 @@ class AppCard extends HTMLElement {
   private config: Config = loadConfig();
   private progress = loadProgress();
   private session = createSession(this.config, this.progress, new Date());
+  private timerHandle: number | null = null;
 
   connectedCallback(): void {
     this.render();
     this.showCurrentNote();
+  }
+
+  disconnectedCallback(): void {
+    this.stopTimer();
   }
 
   private render(): void {
@@ -93,6 +98,8 @@ class AppCard extends HTMLElement {
     toggle.addEventListener('click', () => {
       settingsPanel.classList.toggle('app-card__settings--hidden');
     });
+
+    this.startTimer();
   }
 
   private showCurrentNote(): void {
@@ -105,6 +112,7 @@ class AppCard extends HTMLElement {
     staff.setNote(note);
     this.updateAnswerButtons();
     this.updateStats();
+    this.startTimer();
   }
 
   private updateAnswerButtons(): void {
@@ -131,11 +139,54 @@ class AppCard extends HTMLElement {
 
   private updateStats(): void {
     const statsEl = this.querySelector('.app-card__stats')!;
-    const remaining = this.session.queue.length - this.session.currentIndex;
-    statsEl.textContent = `${this.session.stats.correct} / ${this.session.stats.total} correct · ${remaining} remaining`;
+    const remainingCards = this.session.queue.length - this.session.currentIndex;
+    const mode = this.config.sessionMode;
+    if (mode === 'minutes' && this.session.endTime) {
+      const remainingMs = this.session.endTime.getTime() - Date.now();
+      const timeText = formatRemainingTime(remainingMs);
+      statsEl.textContent = `${this.session.stats.correct} / ${this.session.stats.total} correct · ${timeText} remaining`;
+    } else {
+      statsEl.textContent = `${this.session.stats.correct} / ${this.session.stats.total} correct · ${remainingCards} remaining`;
+    }
+  }
+
+  private startTimer(): void {
+    this.stopTimer();
+    if (this.config.sessionMode !== 'minutes' || !this.session.endTime) {
+      return;
+    }
+    const tick = () => {
+      if (!this.session.endTime) {
+        this.stopTimer();
+        return;
+      }
+      const remainingMs = this.session.endTime.getTime() - Date.now();
+      this.updateStats();
+      if (remainingMs <= 0) {
+        this.stopTimer();
+        const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
+        if (answers) answers.setEnabled(false);
+        const feedback = this.querySelector('.app-card__feedback');
+        if (feedback) {
+          feedback.textContent = "Time's up!";
+          feedback.className = 'app-card__feedback app-card__feedback--incorrect';
+        }
+        setTimeout(() => this.showSummary(), 1500);
+      }
+    };
+    tick();
+    this.timerHandle = window.setInterval(tick, 1000);
+  }
+
+  private stopTimer(): void {
+    if (this.timerHandle !== null) {
+      window.clearInterval(this.timerHandle);
+      this.timerHandle = null;
+    }
   }
 
   private showSummary(): void {
+    this.stopTimer();
     this.innerHTML = `
       <section class="app-card app-card--summary">
         <h2 class="app-card__title">Session complete</h2>

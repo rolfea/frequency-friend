@@ -11,11 +11,13 @@ describe('config storage', () => {
     expect(config.floorMidi).toBe(60);
     expect(config.ceilingMidi).toBe(77);
     expect(config.includeAccidentals).toBe(false);
+    expect(config.sessionMode).toBe('cards');
     expect(config.cardsPerSession).toBe(10);
+    expect(config.sessionDurationMinutes).toBe(5);
   });
 
   it('round-trips config changes', () => {
-    const config = { floorMidi: 55, ceilingMidi: 72, includeAccidentals: true, cardsPerSession: 15 };
+    const config = { floorMidi: 55, ceilingMidi: 72, includeAccidentals: true, sessionMode: 'minutes' as const, cardsPerSession: 15, sessionDurationMinutes: 3 };
     saveConfig(config);
     expect(loadConfig()).toEqual(config);
   });

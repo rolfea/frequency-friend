@@ -8,7 +8,9 @@ test.beforeEach(async ({ page }) => {
       floorMidi: 60,
       ceilingMidi: 77,
       includeAccidentals: false,
+      sessionMode: 'cards',
       cardsPerSession: 10,
+      sessionDurationMinutes: 5,
     }));
   });
   await page.reload();

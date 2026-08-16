@@ -19,7 +19,9 @@ export interface Config {
   floorMidi: number;
   ceilingMidi: number;
   includeAccidentals: boolean;
+  sessionMode: 'cards' | 'minutes';
   cardsPerSession: number;
+  sessionDurationMinutes: number;
 }
 
 const SHARP_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];

@@ -8,7 +8,9 @@ export const DEFAULT_CONFIG: Config = {
   floorMidi: 60, // C4
   ceilingMidi: 77, // F5 (top line of treble staff)
   includeAccidentals: false,
+  sessionMode: 'cards',
   cardsPerSession: 10,
+  sessionDurationMinutes: 5,
 };
 
 export function loadConfig(): Config {
@@ -23,12 +25,17 @@ export function loadConfig(): Config {
     }
     let cardsPerSession = Number.isFinite(parsed.cardsPerSession) ? parsed.cardsPerSession : DEFAULT_CONFIG.cardsPerSession;
     cardsPerSession = Math.max(1, cardsPerSession);
+    let sessionDurationMinutes = Number.isFinite(parsed.sessionDurationMinutes) ? parsed.sessionDurationMinutes : DEFAULT_CONFIG.sessionDurationMinutes;
+    sessionDurationMinutes = Math.max(1, sessionDurationMinutes);
+    const sessionMode = parsed.sessionMode === 'minutes' ? 'minutes' : 'cards';
     return {
       ...DEFAULT_CONFIG,
       ...parsed,
       floorMidi,
       ceilingMidi,
+      sessionMode,
       cardsPerSession,
+      sessionDurationMinutes,
     };
   } catch {
     return DEFAULT_CONFIG;

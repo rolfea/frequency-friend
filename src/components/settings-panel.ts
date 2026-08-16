@@ -26,8 +26,24 @@ class SettingsPanel extends HTMLElement {
           <input name="includeAccidentals" type="checkbox" class="settings-panel__checkbox">
         </label>
         <label class="settings-panel__field">
+          <span>Session mode</span>
+          <select name="sessionMode" class="settings-panel__select">
+            <option value="cards">Cards per session</option>
+            <option value="minutes">Minutes per session</option>
+          </select>
+        </label>
+        <label class="settings-panel__field settings-panel__field--cards">
           <span>Cards per session</span>
           <input name="cardsPerSession" type="number" min="1" max="50" class="settings-panel__number">
+        </label>
+        <label class="settings-panel__field settings-panel__field--minutes">
+          <span>Minutes per session</span>
+          <select name="sessionDurationMinutes" class="settings-panel__select">
+            <option value="1">1</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+          </select>
         </label>
         <button type="submit" class="settings-panel__button">Save</button>
       </form>
@@ -40,6 +56,8 @@ class SettingsPanel extends HTMLElement {
         this.saveCallback(this.readConfig());
       }
     });
+    const sessionMode = form.elements.namedItem('sessionMode') as HTMLSelectElement;
+    sessionMode.addEventListener('change', () => this.updateFieldVisibility());
   }
 
   setConfig(config: Config): void {
@@ -48,7 +66,10 @@ class SettingsPanel extends HTMLElement {
     (form.elements.namedItem('floorMidi') as HTMLSelectElement).value = String(config.floorMidi);
     (form.elements.namedItem('ceilingMidi') as HTMLSelectElement).value = String(config.ceilingMidi);
     (form.elements.namedItem('includeAccidentals') as HTMLInputElement).checked = config.includeAccidentals;
+    (form.elements.namedItem('sessionMode') as HTMLSelectElement).value = config.sessionMode;
     (form.elements.namedItem('cardsPerSession') as HTMLInputElement).value = String(config.cardsPerSession);
+    (form.elements.namedItem('sessionDurationMinutes') as HTMLSelectElement).value = String(config.sessionDurationMinutes);
+    this.updateFieldVisibility();
   }
 
   onSave(callback: (config: Config) => void): void {
@@ -66,22 +87,36 @@ class SettingsPanel extends HTMLElement {
     });
   }
 
+  private updateFieldVisibility(): void {
+    const form = this.querySelector('form') as HTMLFormElement;
+    const mode = (form.elements.namedItem('sessionMode') as HTMLSelectElement).value;
+    const cardsField = this.querySelector('.settings-panel__field--cards') as HTMLElement;
+    const minutesField = this.querySelector('.settings-panel__field--minutes') as HTMLElement;
+    cardsField.style.display = mode === 'cards' ? '' : 'none';
+    minutesField.style.display = mode === 'minutes' ? '' : 'none';
+  }
+
   private readConfig(): Config {
     const form = this.querySelector('form') as HTMLFormElement;
     let floorMidi = Number((form.elements.namedItem('floorMidi') as HTMLSelectElement).value);
     let ceilingMidi = Number((form.elements.namedItem('ceilingMidi') as HTMLSelectElement).value);
     let cardsPerSession = Number((form.elements.namedItem('cardsPerSession') as HTMLInputElement).value);
+    const sessionMode = (form.elements.namedItem('sessionMode') as HTMLSelectElement).value as 'cards' | 'minutes';
+    let sessionDurationMinutes = Number((form.elements.namedItem('sessionDurationMinutes') as HTMLSelectElement).value);
 
     if (floorMidi > ceilingMidi) {
       [floorMidi, ceilingMidi] = [ceilingMidi, floorMidi];
     }
     cardsPerSession = Math.max(1, Number.isFinite(cardsPerSession) ? cardsPerSession : 1);
+    sessionDurationMinutes = Math.max(1, Number.isFinite(sessionDurationMinutes) ? sessionDurationMinutes : 1);
 
     return {
       floorMidi,
       ceilingMidi,
       includeAccidentals: (form.elements.namedItem('includeAccidentals') as HTMLInputElement).checked,
+      sessionMode,
       cardsPerSession,
+      sessionDurationMinutes,
     };
   }
 }
