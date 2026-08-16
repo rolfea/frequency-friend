@@ -1,5 +1,5 @@
 import type { SpelledNote } from '../domain/note.js';
-import { Formatter, Renderer, Stave, StaveNote, Voice } from 'vexflow';
+import { Accidental, Formatter, Renderer, Stave, StaveNote, Voice } from 'vexflow';
 
 class StaffDisplay extends HTMLElement {
   private container: HTMLDivElement;
@@ -71,6 +71,10 @@ class StaffDisplay extends HTMLElement {
       duration: 'q',
       autoStem: true,
     });
+    if (note.accidental !== 'natural') {
+      const symbol = note.accidental === 'sharp' ? '#' : 'b';
+      staveNote.addModifier(new Accidental(symbol), 0);
+    }
 
     // Use a single-note Voice formatted to the stave. This positions one note
     // cleanly without the measure-wide spacing that FormatAndDraw applies.
@@ -82,9 +86,11 @@ class StaffDisplay extends HTMLElement {
 
   private vexflowKey(note: SpelledNote): string {
     const letter = note.key[0].toLowerCase();
-    const accidental = note.accidental === 'sharp' ? '#' : note.accidental === 'flat' ? 'b' : '';
+    // VexFlow needs the key to reflect the actual pitch class so the notehead
+    // is placed on the correct staff line. The accidental is added as a
+    // separate Accidental modifier so it is rendered explicitly.
     const octave = note.key.slice(-1);
-    return `${letter}${accidental}/${octave}`;
+    return `${letter}/${octave}`;
   }
 }
 
