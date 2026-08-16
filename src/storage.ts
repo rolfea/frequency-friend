@@ -16,7 +16,20 @@ export function loadConfig(): Config {
   if (!raw) return DEFAULT_CONFIG;
   try {
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_CONFIG, ...parsed };
+    let floorMidi = Number.isFinite(parsed.floorMidi) ? parsed.floorMidi : DEFAULT_CONFIG.floorMidi;
+    let ceilingMidi = Number.isFinite(parsed.ceilingMidi) ? parsed.ceilingMidi : DEFAULT_CONFIG.ceilingMidi;
+    if (floorMidi > ceilingMidi) {
+      [floorMidi, ceilingMidi] = [ceilingMidi, floorMidi];
+    }
+    let cardsPerSession = Number.isFinite(parsed.cardsPerSession) ? parsed.cardsPerSession : DEFAULT_CONFIG.cardsPerSession;
+    cardsPerSession = Math.max(1, cardsPerSession);
+    return {
+      ...DEFAULT_CONFIG,
+      ...parsed,
+      floorMidi,
+      ceilingMidi,
+      cardsPerSession,
+    };
   } catch {
     return DEFAULT_CONFIG;
   }

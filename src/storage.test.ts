@@ -19,6 +19,19 @@ describe('config storage', () => {
     saveConfig(config);
     expect(loadConfig()).toEqual(config);
   });
+
+  it('normalizes an inverted range so floor is not above ceiling', () => {
+    localStorage.setItem('frequency-friend:config', JSON.stringify({ floorMidi: 72, ceilingMidi: 60 }));
+    const config = loadConfig();
+    expect(config.floorMidi).toBeLessThanOrEqual(config.ceilingMidi);
+    expect(config.floorMidi).toBe(60);
+    expect(config.ceilingMidi).toBe(72);
+  });
+
+  it('clamps cardsPerSession to at least 1', () => {
+    localStorage.setItem('frequency-friend:config', JSON.stringify({ cardsPerSession: 0 }));
+    expect(loadConfig().cardsPerSession).toBe(1);
+  });
 });
 
 describe('progress storage', () => {

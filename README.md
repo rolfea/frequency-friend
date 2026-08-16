@@ -5,12 +5,14 @@ A lightweight, framework-free note-recognition practice app for music students.
 ## Development
 
 ```bash
-npm install
+npm install          # installs dependencies and Playwright Chromium browser
 npm run test         # run unit tests
 npm run test:e2e     # run Playwright end-to-end tests
 npm run build        # compile TypeScript to dist/
 npm run dev          # serve with npx serve
 ```
+
+The `postinstall` script downloads the Playwright Chromium browser automatically, so `npm run test:e2e` works after a fresh `npm install`.
 
 ## Deploy to Render
 
