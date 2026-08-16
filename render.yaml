@@ -1,5 +1,18 @@
 services:
-  - type: static
+  - type: web
     name: frequency-friend
+    runtime: static
     buildCommand: npm install && npm run build
-    publishDir: .
+    staticPublishPath: .
+    branch: main
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - src/**
+        - index.html
+        - style.css
+        - package.json
+        - tsconfig.json
+        - render.yaml
+      ignoredPaths:
+        - src/**/*.test.ts
