@@ -220,19 +220,20 @@ git commit -m "chore: scaffold project and document mvp plan"
 - Produces:
   - `type PitchClass = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11`
   - `interface Note { midi: number; pitchClass: PitchClass; octave: number; accidentalDisplay: 'natural' | 'sharp' | 'flat'; }`
-  - `type DiatonicStep = { step: number; octave: number }` (step 0 = bottom staff line E4)
+  - `interface SpelledNote { midi: number; key: string; displayName: string; pitchClass: PitchClass; accidental: 'natural' | 'sharp' | 'flat'; }`
   - `function pitchClassToName(pc: PitchClass, useSharps: boolean): string`
-  - `function noteKey(note: Note): string` — stable progress key based on MIDI number, e.g. `"60"`
+  - `function noteKey(note: SpelledNote): string`
   - `function midiToNote(midi: number, preferSharps: boolean): Note`
-  - `function midiToDiatonicStep(midi: number): DiatonicStep`
-  - `function notePool(config: { floorMidi: number; ceilingMidi: number; includeAccidentals: boolean }): Note[]`
+  - `function spellNote(midi: number, accidental: 'natural' | 'sharp' | 'flat'): SpelledNote`
+  - `function midiToDiatonicStep(midi: number): { step: number; octave: number }`
+  - `function notePool(config: { floorMidi: number; ceilingMidi: number; includeAccidentals: boolean }): SpelledNote[]`
 
 - [ ] **Step 1: Write the failing test**
 
 `src/domain/note.test.ts`:
 ```ts
 import { describe, expect, it } from 'vitest';
-import { midiToNote, notePool, pitchClassToName, noteKey } from './note.js';
+import { midiToNote, notePool, pitchClassToName, noteKey, spellNote } from './note.js';
 
 describe('pitchClassToName', () => {
   it('returns natural names for white-key pitch classes', () => {
@@ -267,27 +268,48 @@ describe('midiToNote', () => {
     const note = midiToNote(61, true);
     expect(note.pitchClass).toBe(1);
     expect(note.accidentalDisplay).toBe('sharp');
-    expect(noteKey(note)).toBe('61');
   });
 
   it('produces a flat note for Db4 when flats preferred', () => {
     const note = midiToNote(61, false);
     expect(note.pitchClass).toBe(1);
     expect(note.accidentalDisplay).toBe('flat');
-    expect(noteKey(note)).toBe('61');
+  });
+});
+
+describe('spellNote', () => {
+  it('returns C#4 for a sharp spelling of midi 61', () => {
+    const spelled = spellNote(61, 'sharp');
+    expect(spelled.key).toBe('C#4');
+    expect(spelled.displayName).toBe('C♯4');
+    expect(spelled.pitchClass).toBe(1);
+  });
+
+  it('returns Db4 for a flat spelling of midi 61', () => {
+    const spelled = spellNote(61, 'flat');
+    expect(spelled.key).toBe('Db4');
+    expect(spelled.displayName).toBe('D♭4');
+    expect(spelled.pitchClass).toBe(1);
+  });
+});
+
+describe('noteKey', () => {
+  it('uses the spelling key', () => {
+    expect(noteKey(spellNote(61, 'sharp'))).toBe('C#4');
+    expect(noteKey(spellNote(61, 'flat'))).toBe('Db4');
   });
 });
 
 describe('notePool', () => {
   it('returns only natural notes when accidentals are off', () => {
     const pool = notePool({ floorMidi: 60, ceilingMidi: 71, includeAccidentals: false });
-    expect(pool.map((n) => n.midi)).toEqual([60, 62, 64, 65, 67, 69, 71]);
-    expect(pool.every((n) => n.accidentalDisplay === 'natural')).toBe(true);
+    expect(pool.map((n) => n.key)).toEqual(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4']);
+    expect(pool.every((n) => n.accidental === 'natural')).toBe(true);
   });
 
-  it('returns all semitones when accidentals are on', () => {
-    const pool = notePool({ floorMidi: 60, ceilingMidi: 71, includeAccidentals: true });
-    expect(pool.map((n) => n.midi)).toEqual([60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71]);
+  it('returns both sharp and flat spellings for black keys when accidentals are on', () => {
+    const pool = notePool({ floorMidi: 60, ceilingMidi: 62, includeAccidentals: true });
+    expect(pool.map((n) => n.key)).toEqual(['C4', 'C#4', 'Db4', 'D4']);
   });
 });
 ```
@@ -310,6 +332,21 @@ export interface Note {
   accidentalDisplay: 'natural' | 'sharp' | 'flat';
 }
 
+export interface SpelledNote {
+  midi: number;
+  key: string;
+  displayName: string;
+  pitchClass: PitchClass;
+  accidental: 'natural' | 'sharp' | 'flat';
+}
+
+export interface Config {
+  floorMidi: number;
+  ceilingMidi: number;
+  includeAccidentals: boolean;
+  cardsPerSession: number;
+}
+
 export interface DiatonicStep {
   step: number; // 0 = bottom line E4, positive upward; even steps are lines, odd steps are spaces
   octave: number;
@@ -317,12 +354,27 @@ export interface DiatonicStep {
 
 const SHARP_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+const ASCII_KEYS: Record<number, { sharp?: string; flat?: string }> = {
+  0: { sharp: 'C' },
+  1: { sharp: 'C#', flat: 'Db' },
+  2: { sharp: 'D' },
+  3: { sharp: 'D#', flat: 'Eb' },
+  4: { sharp: 'E' },
+  5: { sharp: 'F' },
+  6: { sharp: 'F#', flat: 'Gb' },
+  7: { sharp: 'G' },
+  8: { sharp: 'G#', flat: 'Ab' },
+  9: { sharp: 'A' },
+  10: { sharp: 'A#', flat: 'Bb' },
+  11: { sharp: 'B' },
+};
+
 export function pitchClassToName(pc: PitchClass, useSharps: boolean): string {
   return useSharps ? SHARP_NAMES[pc] : FLAT_NAMES[pc];
 }
 
-export function noteKey(note: Note): string {
-  return String(note.midi);
+export function noteKey(note: SpelledNote): string {
+  return note.key;
 }
 
 export function midiToNote(midi: number, preferSharps: boolean): Note {
@@ -334,6 +386,24 @@ export function midiToNote(midi: number, preferSharps: boolean): Note {
     pitchClass,
     octave,
     accidentalDisplay: isNatural ? 'natural' : preferSharps ? 'sharp' : 'flat',
+  };
+}
+
+export function spellNote(
+  midi: number,
+  accidental: 'natural' | 'sharp' | 'flat',
+): SpelledNote {
+  const pitchClass = (midi % 12) as PitchClass;
+  const octave = Math.floor(midi / 12) - 1;
+  const names = ASCII_KEYS[pitchClass];
+  const ascii = accidental === 'flat' && names.flat ? names.flat : names.sharp!;
+  const display = pitchClassToName(pitchClass, accidental !== 'flat');
+  return {
+    midi,
+    key: `${ascii}${octave}`,
+    displayName: `${display}${octave}`,
+    pitchClass,
+    accidental,
   };
 }
 
@@ -352,13 +422,17 @@ export function notePool(config: {
   floorMidi: number;
   ceilingMidi: number;
   includeAccidentals: boolean;
-}): Note[] {
-  const notes: Note[] = [];
+}): SpelledNote[] {
+  const notes: SpelledNote[] = [];
   for (let midi = config.floorMidi; midi <= config.ceilingMidi; midi++) {
     const pitchClass = (midi % 12) as PitchClass;
     const isNatural = [0, 2, 4, 5, 7, 9, 11].includes(pitchClass);
-    if (!config.includeAccidentals && !isNatural) continue;
-    notes.push(midiToNote(midi, config.includeAccidentals));
+    if (isNatural) {
+      notes.push(spellNote(midi, 'natural'));
+    } else if (config.includeAccidentals) {
+      notes.push(spellNote(midi, 'sharp'));
+      notes.push(spellNote(midi, 'flat'));
+    }
   }
   return notes;
 }
@@ -386,12 +460,12 @@ git commit -m "feat: add note domain with pitch classes and note pool generation
 - Create: `src/domain/scheduler.test.ts`
 
 **Interfaces:**
-- Consumes: `Note`, `noteKey` from `src/domain/note.ts`.
+- Consumes: `SpelledNote`, `noteKey` from `src/domain/note.ts`.
 - Produces:
   - `type Progress = Record<string, Card>` where `Card` is `ts-fsrs`'s `Card` type.
   - `function emptyProgress(): Progress`
-  - `function reviewNote(progress: Progress, note: Note, correct: boolean, now: Date): { updated: Progress; card: Card }`
-  - `function pickDueNotes(pool: Note[], progress: Progress, now: Date, count: number): Note[]`
+  - `function reviewNote(progress: Progress, note: SpelledNote, correct: boolean, now: Date): { updated: Progress; card: Card }`
+  - `function pickDueNotes(pool: SpelledNote[], progress: Progress, now: Date, count: number): SpelledNote[]`
   - `function serializeProgress(progress: Progress): string`
   - `function deserializeProgress(json: string): Progress`
 
@@ -401,7 +475,7 @@ git commit -m "feat: add note domain with pitch classes and note pool generation
 ```ts
 import { describe, expect, it } from 'vitest';
 import { deserializeProgress, emptyProgress, pickDueNotes, reviewNote, serializeProgress } from './scheduler.js';
-import { midiToNote } from './note.js';
+import { midiToNote, spellNote } from './note.js';
 
 describe('emptyProgress', () => {
   it('returns an empty object', () => {
@@ -412,16 +486,16 @@ describe('emptyProgress', () => {
 describe('reviewNote', () => {
   it('creates a new card for an unseen note', () => {
     const progress = emptyProgress();
-    const note = midiToNote(60, true);
+    const note = spellNote(60, 'natural');
     const { updated, card } = reviewNote(progress, note, true, new Date());
-    expect(updated['60']).toBeDefined();
+    expect(updated['C4']).toBeDefined();
     expect(card.due).toBeInstanceOf(Date);
   });
 
   it('schedules an incorrect answer sooner than a correct answer', () => {
     const now = new Date('2024-01-01T12:00:00Z');
     const progress = emptyProgress();
-    const note = midiToNote(60, true);
+    const note = spellNote(60, 'natural');
     const correct = reviewNote(progress, note, true, now);
     const incorrect = reviewNote(correct.updated, note, false, now);
     expect(incorrect.card.due.getTime()).toBeLessThanOrEqual(correct.card.due.getTime());
@@ -430,30 +504,30 @@ describe('reviewNote', () => {
 
 describe('pickDueNotes', () => {
   it('returns the requested count when all notes are new', () => {
-    const pool = [60, 62, 64, 65, 67, 69, 71].map((m) => midiToNote(m, false));
+    const pool = [60, 62, 64, 65, 67, 69, 71].map((m) => spellNote(m, 'natural'));
     const selected = pickDueNotes(pool, emptyProgress(), new Date(), 3);
     expect(selected).toHaveLength(3);
-    expect(selected.every((n) => pool.some((p) => p.midi === n.midi))).toBe(true);
+    expect(selected.every((n) => pool.some((p) => p.key === n.key))).toBe(true);
   });
 
   it('prefers notes that are due', () => {
-    const pool = [60, 64].map((m) => midiToNote(m, false));
+    const pool = [spellNote(60, 'natural'), spellNote(64, 'natural')];
     const now = new Date('2024-01-02T12:00:00Z');
     const progress = emptyProgress();
     const reviewed = reviewNote(progress, pool[0], true, new Date('2024-01-01T12:00:00Z'));
     const selected = pickDueNotes(pool, reviewed.updated, now, 1);
-    expect(selected[0].midi).toBe(pool[0].midi);
+    expect(selected[0].key).toBe(pool[0].key);
   });
 });
 
 describe('serializeProgress / deserializeProgress', () => {
   it('round-trips card dates as numbers', () => {
     const progress = emptyProgress();
-    const { updated } = reviewNote(progress, midiToNote(60, true), true, new Date('2024-01-01T12:00:00Z'));
+    const { updated } = reviewNote(progress, spellNote(60, 'natural'), true, new Date('2024-01-01T12:00:00Z'));
     const json = serializeProgress(updated);
     const restored = deserializeProgress(json);
-    expect(restored['60'].due).toBeInstanceOf(Date);
-    expect(restored['60'].due.getTime()).toBe(updated['60'].due.getTime());
+    expect(restored['C4'].due).toBeInstanceOf(Date);
+    expect(restored['C4'].due.getTime()).toBe(updated['C4'].due.getTime());
   });
 });
 ```
@@ -468,7 +542,7 @@ Expected: FAIL — functions not defined.
 `src/domain/scheduler.ts`:
 ```ts
 import { createEmptyCard, fsrs, Rating, type Card } from 'ts-fsrs';
-import { noteKey, type Note } from './note.js';
+import { noteKey, type SpelledNote } from './note.js';
 
 export type Progress = Record<string, Card>;
 
@@ -480,7 +554,7 @@ export function emptyProgress(): Progress {
 
 export function reviewNote(
   progress: Progress,
-  note: Note,
+  note: SpelledNote,
   correct: boolean,
   now: Date,
 ): { updated: Progress; card: Card } {
@@ -492,9 +566,9 @@ export function reviewNote(
   return { updated, card: result.card };
 }
 
-export function pickDueNotes(pool: Note[], progress: Progress, now: Date, count: number): Note[] {
-  const due: Note[] = [];
-  const notDue: Note[] = [];
+export function pickDueNotes(pool: SpelledNote[], progress: Progress, now: Date, count: number): SpelledNote[] {
+  const due: SpelledNote[] = [];
+  const notDue: SpelledNote[] = [];
   for (const note of pool) {
     const card = progress[noteKey(note)];
     if (!card || card.due.getTime() <= now.getTime()) {
@@ -503,7 +577,7 @@ export function pickDueNotes(pool: Note[], progress: Progress, now: Date, count:
       notDue.push(note);
     }
   }
-  const selected: Note[] = [];
+  const selected: SpelledNote[] = [];
   for (let i = 0; i < count; i++) {
     const source = due.length > 0 ? due : notDue;
     if (source.length === 0) break;
@@ -558,9 +632,9 @@ git commit -m "feat: wrap ts-fsrs scheduler for note review and due-note selecti
 **Interfaces:**
 - Consumes: `Note`, `notePool` from `src/domain/note.ts`; `pickDueNotes`, `reviewNote` from `src/domain/scheduler.ts`.
 - Produces:
-  - `interface Session { config: Config; queue: Note[]; currentIndex: number; stats: { correct: number; total: number }; }`
+  - `interface Session { config: Config; queue: SpelledNote[]; currentIndex: number; stats: { correct: number; total: number }; }`
   - `function createSession(config: Config, progress: Progress, now: Date): Session`
-  - `function currentNote(session: Session): Note | null`
+  - `function currentNote(session: Session): SpelledNote | null`
   - `function answer(session: Session, progress: Progress, selectedPitchClass: PitchClass, now: Date): { updatedSession: Session; updatedProgress: Progress; wasCorrect: boolean; correctPitchClass: PitchClass }`
 
 - [ ] **Step 1: Write the failing test**
@@ -619,12 +693,12 @@ Expected: FAIL.
 
 `src/domain/session.ts`:
 ```ts
-import { midiToNote, notePool, type Note, type PitchClass, type Config } from './note.js';
+import { notePool, type SpelledNote, type PitchClass, type Config } from './note.js';
 import { emptyProgress, pickDueNotes, reviewNote, type Progress } from './scheduler.js';
 
 export interface Session {
   config: Config;
-  queue: Note[];
+  queue: SpelledNote[];
   currentIndex: number;
   stats: { correct: number; total: number };
 }
@@ -640,7 +714,7 @@ export function createSession(config: Config, progress: Progress, now: Date): Se
   };
 }
 
-export function currentNote(session: Session): Note | null {
+export function currentNote(session: Session): SpelledNote | null {
   return session.queue[session.currentIndex] ?? null;
 }
 
@@ -837,7 +911,7 @@ git commit -m "feat: add localStorage helpers for config and progress"
 ```ts
 import { describe, expect, it, beforeEach } from 'vitest';
 import './staff-display.js';
-import { midiToNote } from '../domain/note.js';
+import { spellNote } from '../domain/note.js';
 
 describe('staff-display', () => {
   beforeEach(() => {
@@ -847,14 +921,14 @@ describe('staff-display', () => {
   it('renders an svg', () => {
     document.body.innerHTML = '<staff-display></staff-display>';
     const el = document.querySelector('staff-display')!;
-    el.setNote(midiToNote(64, true)); // E4
+    el.setNote(spellNote(64, 'natural')); // E4
     expect(el.querySelector('svg')).not.toBeNull();
   });
 
   it('renders a note head for middle C', () => {
     document.body.innerHTML = '<staff-display></staff-display>';
     const el = document.querySelector('staff-display')!;
-    el.setNote(midiToNote(60, true)); // C4
+    el.setNote(spellNote(60, 'natural')); // C4
     expect(el.querySelector('.note-head')).not.toBeNull();
   });
 });
@@ -869,7 +943,7 @@ Expected: FAIL.
 
 `src/components/staff-display.ts`:
 ```ts
-import { midiToDiatonicStep, pitchClassToName, type Note } from '../domain/note.js';
+import { midiToDiatonicStep, pitchClassToName, type SpelledNote } from '../domain/note.js';
 
 const STAFF_WIDTH = 320;
 const STAFF_HEIGHT = 160;
@@ -889,11 +963,11 @@ class StaffDisplay extends HTMLElement {
     this.render();
   }
 
-  setNote(note: Note): void {
+  setNote(note: SpelledNote): void {
     this.render(note);
   }
 
-  private render(note?: Note): void {
+  private render(note?: SpelledNote): void {
     this.svg.innerHTML = '';
 
     // Staff lines: E4, G4, B4, D5, F5
@@ -923,7 +997,7 @@ class StaffDisplay extends HTMLElement {
     }
   }
 
-  private renderNote(note: Note): void {
+  private renderNote(note: SpelledNote): void {
     const step = midiToDiatonicStep(note.midi);
     const y = MIDDLE_LINE_Y - step.step * (LINE_SPACING / 2);
 
@@ -952,13 +1026,13 @@ class StaffDisplay extends HTMLElement {
     this.svg.appendChild(head);
 
     // Accidental
-    if (note.accidentalDisplay !== 'natural') {
+    if (note.accidental !== 'natural') {
       const accidental = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       accidental.setAttribute('x', String(CENTER_X - 22));
       accidental.setAttribute('y', String(y + 5));
       accidental.setAttribute('font-size', '24');
       accidental.setAttribute('class', 'staff-display__accidental');
-      accidental.textContent = note.accidentalDisplay === 'sharp' ? '♯' : '♭';
+      accidental.textContent = note.accidental === 'sharp' ? '♯' : '♭';
       this.svg.appendChild(accidental);
     }
   }
@@ -1220,7 +1294,7 @@ Expected: FAIL.
 
 `src/components/app-card.ts`:
 ```ts
-import type { Config, Note, PitchClass } from '../domain/note.js';
+import type { Config, PitchClass, SpelledNote } from '../domain/note.js';
 import { createSession, currentNote, answer } from '../domain/session.js';
 import { loadConfig, loadProgress, saveConfig, saveProgress } from '../storage.js';
 import { pitchClassToName } from '../domain/note.js';
@@ -1263,14 +1337,16 @@ class AppCard extends HTMLElement {
 
     answers.onSelect((pitchClass: PitchClass) => {
       const now = new Date();
+      const note = currentNote(this.session)!;
       const result = answer(this.session, this.progress, pitchClass, now);
       this.session = result.updatedSession;
       this.progress = result.updatedProgress;
       saveProgress(this.progress);
 
+      const correctName = pitchClassToName(result.correctPitchClass, note.accidental !== 'flat');
       feedback.textContent = result.wasCorrect
         ? 'Correct!'
-        : `Incorrect. The correct answer was ${pitchClassToName(result.correctPitchClass, this.config.includeAccidentals)}.`;
+        : `Incorrect. The correct answer was ${correctName}.`;
       feedback.className = `app-card__feedback app-card__feedback--${result.wasCorrect ? 'correct' : 'incorrect'}`;
 
       this.updateStats();
@@ -1336,7 +1412,8 @@ class AppCard extends HTMLElement {
 
   private updateStats(): void {
     const statsEl = this.querySelector('.app-card__stats')!;
-    statsEl.textContent = `${this.session.stats.correct} / ${this.session.stats.total} correct · ${this.session.queue.length - this.session.currentIndex} remaining`;
+    const remaining = this.session.queue.length - this.session.currentIndex;
+    statsEl.textContent = `${this.session.stats.correct} / ${this.session.stats.total} correct · ${remaining} remaining`;
   }
 
   private showSummary(): void {

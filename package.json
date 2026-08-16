@@ -1,0 +1,19 @@
+{
+  "name": "frequency-friend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "npx serve .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0",
+    "jsdom": "^24.0.0"
+  },
+  "dependencies": {
+    "ts-fsrs": "^5.4.0"
+  }
+}

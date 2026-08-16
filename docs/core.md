@@ -97,9 +97,10 @@ frequency-friend/
 
 - `PitchClass` — `0..11` representing C, C♯/D♭, D, … B.
 - `Note` — `{ midi: number; pitchClass: PitchClass; octave: number; accidentalDisplay: 'natural' | 'sharp' | 'flat' }`.
+- `SpelledNote` — `{ midi: number; key: string; displayName: string; pitchClass: PitchClass; accidental: 'natural' | 'sharp' | 'flat' }`. A single MIDI pitch may have multiple spellings (e.g. C♯4 and D♭4), and each spelling is tracked independently.
 - `Config` — `{ floorMidi: number; ceilingMidi: number; includeAccidentals: boolean; cardsPerSession: number }`.
-- `Session` — `{ config: Config; queue: Note[]; current: number; stats: { correct: number; total: number } }`.
-- `Progress` — map from a note key based on MIDI number (e.g. `"60"`) to a serializable `ts-fsrs` card state.
+- `Session` — `{ config: Config; queue: SpelledNote[]; currentIndex: number; stats: { correct: number; total: number } }`.
+- `Progress` — map from a spelling key (e.g. `"C#4"` or `"Db4"`) to a serializable `ts-fsrs` card state.
 
 ## Components & Flow
 
@@ -118,7 +119,7 @@ The staff is drawn with SVG:
 - Note head as an ellipse placed on the correct line/space; ledger lines added when the note sits outside the staff.
 - Accidentals rendered left of the note head when `accidentalDisplay` is `sharp` or `flat`.
 
-Positioning is computed from the note’s diatonic staff step, not from the MIDI number directly, so enharmonics land in the right place.
+Positioning is computed from the note’s MIDI number and its chosen spelling, so enharmonic variants land on the same staff location but are tracked separately in the spaced-repetition engine.
 
 The treble clef is rendered as the `𝄞` music-symbol glyph inside the SVG, which avoids hand-maintaining a complex path and provides a reliable, scalable visual.
 
@@ -141,7 +142,7 @@ Defaults: C4 to G5, accidentals off, 10 cards.
 `scheduler.ts` wraps `ts-fsrs`:
 - `createCard()` → `createEmptyCard()`.
 - `reviewCard(card, correct, now)` → `scheduler.next(card, now, correct ? Rating.Good : Rating.Again)`.
-- `pickDueNotes(pool, progress, now, count)` picks notes whose `due` date is at or before `now`, falling back to random/weighted selection if not enough are due.
+- `pickDueNotes(pool, progress, now, count)` picks spelled notes whose `due` date is at or before `now`, falling back to random/weighted selection if not enough are due.
 
 Progress is serialized to `localStorage` as JSON after each review.
 

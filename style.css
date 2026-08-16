@@ -1,0 +1,20 @@
+:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-accent: #2563eb;
+  --color-correct: #16a34a;
+  --color-incorrect: #dc2626;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 1rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.app-card {
+  max-width: 640px;
+  margin: 0 auto;
+}
