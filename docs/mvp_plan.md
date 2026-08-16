@@ -6,7 +6,7 @@
 
 **Architecture:** Tiny central state module in `main.ts`; pure domain logic in `src/domain/`; presentational custom elements in `src/components/`; `ts-fsrs` wrapped by `src/domain/scheduler.ts`; `localStorage` via `src/storage.ts`; vanilla CSS and SVG for the staff.
 
-**Tech Stack:** TypeScript (no framework), `ts-fsrs`, `vitest`, vanilla CSS, inline SVG, `tsc`, `npx serve`, Render static sites.
+**Tech Stack:** TypeScript (no framework), `ts-fsrs`, `vitest`, vanilla CSS, VexFlow-rendered SVG, `tsc`, `npx serve`, Render static sites.
 
 **Spec:** `docs/core.md`
 
@@ -939,119 +939,23 @@ describe('staff-display', () => {
 Run: `npx vitest run src/components/staff-display.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation using VexFlow**
 
-`src/components/staff-display.ts`:
-```ts
-import { midiToDiatonicStep, pitchClassToName, type SpelledNote } from '../domain/note.js';
+`src/components/staff-display.ts` uses VexFlow's `Renderer`, `Stave`, `StaveNote`, and `Accidental` to render the treble staff, note, and accidental as SVG. It co-locates a single note in a `Voice` and primes the Bravura font before first render to avoid ledger-line sizing flicker on initial load.
 
-const STAFF_WIDTH = 320;
-const STAFF_HEIGHT = 160;
-const LINE_SPACING = 12;
-const CENTER_X = STAFF_WIDTH / 2;
-const MIDDLE_LINE_Y = STAFF_HEIGHT / 2; // B4
-
-class StaffDisplay extends HTMLElement {
-  private svg: SVGSVGElement;
-
-  constructor() {
-    super();
-    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    this.svg.setAttribute('viewBox', `0 0 ${STAFF_WIDTH} ${STAFF_HEIGHT}`);
-    this.svg.setAttribute('class', 'staff-display__svg');
-    this.appendChild(this.svg);
-    this.render();
-  }
-
-  setNote(note: SpelledNote): void {
-    this.render(note);
-  }
-
-  private render(note?: SpelledNote): void {
-    this.svg.innerHTML = '';
-
-    // Staff lines: E4, G4, B4, D5, F5
-    for (let i = -2; i <= 2; i++) {
-      const y = MIDDLE_LINE_Y - i * LINE_SPACING;
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', '20');
-      line.setAttribute('x2', String(STAFF_WIDTH - 20));
-      line.setAttribute('y1', String(y));
-      line.setAttribute('y2', String(y));
-      line.setAttribute('stroke', 'currentColor');
-      line.setAttribute('stroke-width', '1');
-      this.svg.appendChild(line);
-    }
-
-    // Treble clef
-    const clef = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    clef.setAttribute('x', '30');
-    clef.setAttribute('y', String(MIDDLE_LINE_Y + 18));
-    clef.setAttribute('font-size', '48');
-    clef.setAttribute('class', 'staff-display__clef');
-    clef.textContent = '𝄞';
-    this.svg.appendChild(clef);
-
-    if (note) {
-      this.renderNote(note);
-    }
-  }
-
-  private renderNote(note: SpelledNote): void {
-    const step = midiToDiatonicStep(note.midi);
-    const y = MIDDLE_LINE_Y - step.step * (LINE_SPACING / 2);
-
-    // Ledger lines for line notes outside the staff (even steps outside [0, 8]).
-    const isLine = step.step % 2 === 0;
-    const isOutsideStaff = step.step < 0 || step.step > 8;
-    if (isLine && isOutsideStaff) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(CENTER_X - 14));
-      line.setAttribute('x2', String(CENTER_X + 14));
-      line.setAttribute('y1', String(y));
-      line.setAttribute('y2', String(y));
-      line.setAttribute('stroke', 'currentColor');
-      line.setAttribute('stroke-width', '1');
-      this.svg.appendChild(line);
-    }
-
-    // Note head
-    const head = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    head.setAttribute('cx', String(CENTER_X));
-    head.setAttribute('cy', String(y));
-    head.setAttribute('rx', '8');
-    head.setAttribute('ry', '6');
-    head.setAttribute('class', 'note-head');
-    head.setAttribute('fill', 'currentColor');
-    this.svg.appendChild(head);
-
-    // Accidental
-    if (note.accidental !== 'natural') {
-      const accidental = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      accidental.setAttribute('x', String(CENTER_X - 22));
-      accidental.setAttribute('y', String(y + 5));
-      accidental.setAttribute('font-size', '24');
-      accidental.setAttribute('class', 'staff-display__accidental');
-      accidental.textContent = note.accidental === 'sharp' ? '♯' : '♭';
-      this.svg.appendChild(accidental);
-    }
-  }
-}
-
-customElements.define('staff-display', StaffDisplay);
-```
-
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/components/staff-display.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+The unit test only asserts that an SVG is produced and contains note-head paths; the Playwright e2e suite (`tests/e2e/staff.spec.ts`) covers visual behavior such as ledger-line width and accidental rendering.
+
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/staff-display.ts src/components/staff-display.test.ts
 
-git commit -m "feat: add svg staff display custom element"
+git commit -m "feat: render staff and notes with VexFlow"
 ```
 
 ---

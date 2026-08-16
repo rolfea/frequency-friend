@@ -50,7 +50,7 @@ The same goes for CSS - just use vanilla CSS, aim for plain, readable, simple im
 | Session length | Fixed card count, default 10, user-configurable |
 | Scoring | Binary Correct / Incorrect, mapped to `Rating.Good` / `Rating.Again` |
 | Wrong answer flow | Show correct answer immediately, then re-quiz the note later in the same session |
-| Staff rendering | Inline SVG |
+| Staff rendering | VexFlow (produces SVG; replaced hand-rolled SVG for reliable notation layout) |
 | UI framework | None; vanilla TypeScript + CSS |
 | CSS naming | BEM-style class names, kept simple |
 | Build output | `tsc` compiles `src/**/*.ts` to `dist/` |
@@ -113,15 +113,7 @@ frequency-friend/
 
 ## Rendering
 
-The staff is drawn with SVG:
-- 5 staff lines as horizontal `<line>` elements.
-- Treble clef as the music-symbol glyph `𝄞` inside the SVG text element.
-- Note head as an ellipse placed on the correct line/space; ledger lines added when the note sits outside the staff.
-- Accidentals rendered left of the note head when `accidentalDisplay` is `sharp` or `flat`.
-
-Positioning is computed from the note’s MIDI number and its chosen spelling, so enharmonic variants land on the same staff location but are tracked separately in the spaced-repetition engine.
-
-The treble clef is rendered as the `𝄞` music-symbol glyph inside the SVG, which avoids hand-maintaining a complex path and provides a reliable, scalable visual.
+The staff is drawn with VexFlow, which emits SVG: a treble clef, five-line staff, note heads, stems, ledger lines, and accidentals. VexFlow handles spacing and glyph metrics so enharmonic variants and above/below-staff notes render reliably.
 
 ## Configuration
 
