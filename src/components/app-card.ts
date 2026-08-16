@@ -6,10 +6,12 @@ import { fingeringForNote, fingeringOptions, formatFingering, isCorrectFingering
 import type StaffDisplay from './staff-display.js';
 import type AnswerButtons from './answer-buttons.js';
 import type FingeringButtons from './fingering-buttons.js';
+import type FingeringDiagram from './fingering-diagram.js';
 import type SettingsPanel from './settings-panel.js';
 import './staff-display.js';
 import './answer-buttons.js';
 import './fingering-buttons.js';
+import './fingering-diagram.js';
 import './settings-panel.js';
 
 class AppCard extends HTMLElement {
@@ -41,6 +43,7 @@ class AppCard extends HTMLElement {
         <staff-display class="app-card__staff"></staff-display>
         <div class="app-card__feedback" aria-live="polite"></div>
         <answer-buttons class="app-card__answers"></answer-buttons>
+        <fingering-diagram class="app-card__diagram app-card__diagram--hidden"></fingering-diagram>
         <fingering-buttons class="app-card__fingerings app-card__fingerings--hidden"></fingering-buttons>
         <settings-panel class="app-card__settings app-card__settings--hidden"></settings-panel>
       </section>
@@ -48,6 +51,7 @@ class AppCard extends HTMLElement {
 
     const staff = this.querySelector('staff-display')! as unknown as StaffDisplay;
     const answers = this.querySelector('answer-buttons')! as unknown as AnswerButtons;
+    const diagram = this.querySelector('fingering-diagram')! as unknown as FingeringDiagram;
     const fingerings = this.querySelector('fingering-buttons')! as unknown as FingeringButtons;
     const feedback = this.querySelector('.app-card__feedback')!;
     const settingsPanel = this.querySelector('settings-panel')! as unknown as SettingsPanel;
@@ -104,10 +108,10 @@ class AppCard extends HTMLElement {
       const note = this.pendingFingeringNote;
       if (!note) return;
       const wasCorrect = isCorrectFingering(note, valves);
-      const correctLabel = formatFingering(fingeringForNote(note));
+      diagram.setFingering(valves);
       feedback.textContent = wasCorrect
         ? 'Correct fingering!'
-        : `Incorrect fingering. The correct fingering was ${correctLabel}.`;
+        : 'Incorrect fingering.';
       feedback.className = `app-card__feedback app-card__feedback--${wasCorrect ? 'correct' : 'incorrect'}`;
       fingerings.setEnabled(false);
 
@@ -121,7 +125,7 @@ class AppCard extends HTMLElement {
         } else {
           this.showSummary();
         }
-      }, 1200);
+      }, 2000);
     });
 
     settingsPanel.setConfig(this.config);
@@ -143,6 +147,28 @@ class AppCard extends HTMLElement {
     this.startTimer();
   }
 
+  private showFingeringStep(): void {
+    const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
+    const diagram = this.querySelector('fingering-diagram') as unknown as FingeringDiagram | null;
+    const fingerings = this.querySelector('fingering-buttons') as unknown as FingeringButtons | null;
+    const hint = this.querySelector('.app-card__hint');
+    if (answers) answers.classList.add('app-card__answers--hidden');
+    if (diagram) {
+      diagram.classList.remove('app-card__diagram--hidden');
+      if (this.pendingFingeringNote) {
+        diagram.setFingering(fingeringForNote(this.pendingFingeringNote));
+      }
+    }
+    if (fingerings) {
+      fingerings.classList.remove('app-card__fingerings--hidden');
+      fingerings.setEnabled(true);
+    }
+    if (hint) {
+      hint.textContent = 'Now pick the fingering!';
+      hint.classList.remove('app-card__hint--hidden');
+    }
+  }
+
   private showCurrentNote(): void {
     const note = currentNote(this.session);
     if (!note) {
@@ -157,12 +183,16 @@ class AppCard extends HTMLElement {
     this.startTimer();
 
     const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
+    const diagram = this.querySelector('fingering-diagram') as unknown as FingeringDiagram | null;
     const fingerings = this.querySelector('fingering-buttons') as unknown as FingeringButtons | null;
     const hint = this.querySelector('.app-card__hint');
     const feedback = this.querySelector('.app-card__feedback');
     if (answers) {
       answers.classList.remove('app-card__answers--hidden');
       answers.setEnabled(true);
+    }
+    if (diagram) {
+      diagram.classList.add('app-card__diagram--hidden');
     }
     if (fingerings) {
       fingerings.classList.add('app-card__fingerings--hidden');
@@ -174,21 +204,6 @@ class AppCard extends HTMLElement {
     if (feedback) {
       feedback.textContent = '';
       feedback.className = 'app-card__feedback';
-    }
-  }
-
-  private showFingeringStep(): void {
-    const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
-    const fingerings = this.querySelector('fingering-buttons') as unknown as FingeringButtons | null;
-    const hint = this.querySelector('.app-card__hint');
-    if (answers) answers.classList.add('app-card__answers--hidden');
-    if (fingerings) {
-      fingerings.classList.remove('app-card__fingerings--hidden');
-      fingerings.setEnabled(true);
-    }
-    if (hint) {
-      hint.textContent = 'Now pick the fingering!';
-      hint.classList.remove('app-card__hint--hidden');
     }
   }
 

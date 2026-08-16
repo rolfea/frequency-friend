@@ -106,8 +106,41 @@ body {
 }
 
 .app-card__answers--hidden,
-.app-card__fingerings--hidden {
+.app-card__fingerings--hidden,
+.app-card__diagram--hidden {
   display: none;
+}
+
+.app-card__diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
+  color: var(--color-accent);
+}
+
+.fingering-diagram {
+  width: 80px;
+  height: 144px;
+}
+
+.fingering-diagram__casing {
+  color: inherit;
+}
+
+.fingering-diagram__valve {
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: fill 0.15s ease;
+}
+
+.fingering-diagram__valve--pressed {
+  fill: currentColor;
+}
+
+.fingering-diagram__label {
+  fill: #fff;
+  pointer-events: none;
 }
 
 .fingering-buttons__grid {

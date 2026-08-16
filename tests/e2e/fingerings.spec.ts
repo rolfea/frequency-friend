@@ -29,6 +29,7 @@ test('after naming the pitch, asks for the fingering', async ({ page }) => {
 
   await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
   await expect(page.locator('.fingering-buttons__button')).toHaveCount(8);
+  await expect(page.locator('fingering-diagram svg')).toBeVisible();
 });
 
 test('gives feedback on the chosen fingering', async ({ page }) => {
