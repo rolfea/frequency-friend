@@ -3,6 +3,9 @@ import { Formatter, Renderer, Stave, StaveNote, Voice } from 'vexflow';
 
 class StaffDisplay extends HTMLElement {
   private container: HTMLDivElement;
+  private pendingNote: SpelledNote | null = null;
+  private fontsPrimed = false;
+  private priming: Promise<void> | null = null;
 
   constructor() {
     super();
@@ -12,7 +15,40 @@ class StaffDisplay extends HTMLElement {
   }
 
   setNote(note: SpelledNote): void {
-    this.render(note);
+    this.pendingNote = note;
+    if (this.fontsPrimed) {
+      this.render(note);
+      return;
+    }
+    const needsAsync = typeof document !== 'undefined' && !!document.fonts;
+    if (!needsAsync) {
+      this.fontsPrimed = true;
+      this.render(note);
+      return;
+    }
+    if (!this.priming) {
+      this.priming = this.primeFonts().then(() => {
+        this.fontsPrimed = true;
+        this.priming = null;
+        if (this.pendingNote) {
+          this.render(this.pendingNote);
+        }
+      });
+    }
+  }
+
+  private async primeFonts(): Promise<void> {
+    // VexFlow measures notehead widths via canvas text metrics using the
+    // Bravura music font. On first load the font may technically be loaded
+    // but the browser needs one more paint frame before canvas metrics use
+    // it. Wait here so the first visible render has correct glyph widths and
+    // therefore correctly-sized ledger lines.
+    if (typeof document !== 'undefined' && document.fonts) {
+      await document.fonts.ready;
+    }
+    if (typeof requestAnimationFrame !== 'undefined') {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
   }
 
   private render(note: SpelledNote): void {

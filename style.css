@@ -38,6 +38,13 @@ body {
   color: #666;
 }
 
+.staff-display {
+  min-height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .app-card__feedback {
   min-height: 1.5rem;
   font-weight: 600;
