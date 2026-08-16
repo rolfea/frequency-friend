@@ -6,10 +6,10 @@ test.beforeEach(async ({ page }) => {
     localStorage.clear();
     localStorage.setItem('frequency-friend:config', JSON.stringify({
       floorMidi: 60,
-      ceilingMidi: 64,
+      ceilingMidi: 60,
       includeAccidentals: false,
       sessionMode: 'cards',
-      cardsPerSession: 10,
+      cardsPerSession: 1,
       sessionDurationMinutes: 5,
       showFingerings: true,
     }));
@@ -19,25 +19,32 @@ test.beforeEach(async ({ page }) => {
 
 test('after naming the pitch, asks for the fingering', async ({ page }) => {
   await expect(page.locator('.app-card__hint')).toHaveText('Name the pitch!');
-
-  // Pick the pitch name for the displayed note. The note is one of C4/D4/E4/F4/G4;
-  // choose the first matching answer button.
-  const pitchButtons = page.locator('.answer-buttons__button');
-  const count = await pitchButtons.count();
-  expect(count).toBeGreaterThan(0);
-  await pitchButtons.first().click();
+  await page.locator('.answer-buttons__button', { hasText: 'C' }).click();
+  await expect(page.locator('.app-card__feedback')).toContainText('Correct');
 
   await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
-  await expect(page.locator('.fingering-buttons__button')).toHaveCount(8);
   await expect(page.locator('fingering-diagram svg')).toBeVisible();
+  await expect(page.locator('.fingering-option')).toHaveCount(8);
 });
 
-test('gives feedback on the chosen fingering', async ({ page }) => {
-  const pitchButtons = page.locator('.answer-buttons__button');
-  await pitchButtons.first().click();
+test('selecting the correct fingering reports correct', async ({ page }) => {
+  await page.locator('.answer-buttons__button', { hasText: 'C' }).click();
+  await expect(page.locator('.app-card__feedback')).toContainText('Correct');
+  await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
 
-  const fingeringButtons = page.locator('.fingering-buttons__button');
-  await fingeringButtons.first().click();
+  // C4 is open on a Bb trumpet.
+  await page.getByRole('button', { name: 'Open' }).click();
 
-  await expect(page.locator('.app-card__feedback')).toContainText(/fingering/);
+  await expect(page.locator('.app-card__feedback')).toContainText('Correct fingering');
+});
+
+test('selecting an incorrect fingering reports incorrect', async ({ page }) => {
+  await page.locator('.answer-buttons__button', { hasText: 'C' }).click();
+  await expect(page.locator('.app-card__feedback')).toContainText('Correct');
+  await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
+
+  // Pick a non-open diagram (valve 1).
+  await page.getByRole('button', { name: '1', exact: true }).click();
+
+  await expect(page.locator('.app-card__feedback')).toContainText('Incorrect fingering');
 });
