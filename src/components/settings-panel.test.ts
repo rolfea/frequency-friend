@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import './settings-panel.js';
 import type { Config } from '../domain/note.js';
+import type SettingsPanel from './settings-panel.js';
 
 describe('settings-panel', () => {
   beforeEach(() => {
@@ -9,7 +10,7 @@ describe('settings-panel', () => {
 
   it('renders inputs from config', () => {
     document.body.innerHTML = '<settings-panel></settings-panel>';
-    const el = document.querySelector('settings-panel')!;
+    const el = document.querySelector('settings-panel')! as unknown as SettingsPanel;
     const config: Config = { floorMidi: 60, ceilingMidi: 79, includeAccidentals: false, cardsPerSession: 10 };
     el.setConfig(config);
     expect(el.querySelector('form')).not.toBeNull();
@@ -17,7 +18,7 @@ describe('settings-panel', () => {
 
   it('calls onSave with updated config', () => {
     document.body.innerHTML = '<settings-panel></settings-panel>';
-    const el = document.querySelector('settings-panel')!;
+    const el = document.querySelector('settings-panel')! as unknown as SettingsPanel;
     const config: Config = { floorMidi: 60, ceilingMidi: 79, includeAccidentals: false, cardsPerSession: 10 };
     el.setConfig(config);
     const handler = vi.fn();

@@ -68,13 +68,24 @@ class SettingsPanel extends HTMLElement {
 
   private readConfig(): Config {
     const form = this.querySelector('form') as HTMLFormElement;
+    let floorMidi = Number((form.elements.namedItem('floorMidi') as HTMLSelectElement).value);
+    let ceilingMidi = Number((form.elements.namedItem('ceilingMidi') as HTMLSelectElement).value);
+    let cardsPerSession = Number((form.elements.namedItem('cardsPerSession') as HTMLInputElement).value);
+
+    if (floorMidi > ceilingMidi) {
+      [floorMidi, ceilingMidi] = [ceilingMidi, floorMidi];
+    }
+    cardsPerSession = Math.max(1, Number.isFinite(cardsPerSession) ? cardsPerSession : 1);
+
     return {
-      floorMidi: Number((form.elements.namedItem('floorMidi') as HTMLSelectElement).value),
-      ceilingMidi: Number((form.elements.namedItem('ceilingMidi') as HTMLSelectElement).value),
+      floorMidi,
+      ceilingMidi,
       includeAccidentals: (form.elements.namedItem('includeAccidentals') as HTMLInputElement).checked,
-      cardsPerSession: Number((form.elements.namedItem('cardsPerSession') as HTMLInputElement).value),
+      cardsPerSession,
     };
   }
 }
 
 customElements.define('settings-panel', SettingsPanel);
+
+export default SettingsPanel;

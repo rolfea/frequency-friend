@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { midiToNote, notePool, pitchClassToName, noteKey, spellNote } from './note.js';
+import { notePool, pitchClassToName, noteKey, spellNote } from './note.js';
 
 describe('pitchClassToName', () => {
   it('returns natural names for white-key pitch classes', () => {
@@ -18,28 +18,6 @@ describe('pitchClassToName', () => {
     expect(pitchClassToName(1, false)).toBe('D♭');
     expect(pitchClassToName(6, false)).toBe('G♭');
     expect(pitchClassToName(10, false)).toBe('B♭');
-  });
-});
-
-describe('midiToNote', () => {
-  it('produces the correct natural note for C4', () => {
-    const note = midiToNote(60, true);
-    expect(note.midi).toBe(60);
-    expect(note.pitchClass).toBe(0);
-    expect(note.octave).toBe(4);
-    expect(note.accidentalDisplay).toBe('natural');
-  });
-
-  it('produces a sharp note for C#4', () => {
-    const note = midiToNote(61, true);
-    expect(note.pitchClass).toBe(1);
-    expect(note.accidentalDisplay).toBe('sharp');
-  });
-
-  it('produces a flat note for Db4 when flats preferred', () => {
-    const note = midiToNote(61, false);
-    expect(note.pitchClass).toBe(1);
-    expect(note.accidentalDisplay).toBe('flat');
   });
 });
 

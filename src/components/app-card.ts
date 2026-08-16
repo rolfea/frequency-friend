@@ -44,12 +44,16 @@ class AppCard extends HTMLElement {
 
     answers.onSelect((pitchClass: PitchClass) => {
       const now = new Date();
-      const note = currentNote(this.session)!;
       const result = answer(this.session, this.progress, pitchClass, now);
+      if (!result) {
+        this.showSummary();
+        return;
+      }
       this.session = result.updatedSession;
       this.progress = result.updatedProgress;
       saveProgress(this.progress);
 
+      const note = this.session.queue[this.session.currentIndex - 1]!;
       const correctName = pitchClassToName(result.correctPitchClass, note.accidental !== 'flat');
       feedback.textContent = result.wasCorrect
         ? 'Correct!'
@@ -76,6 +80,7 @@ class AppCard extends HTMLElement {
       saveConfig(config);
       this.session = createSession(this.config, this.progress, new Date());
       settingsPanel.classList.add('app-card__settings--hidden');
+      settingsPanel.setConfig(this.config);
       this.showCurrentNote();
     });
 

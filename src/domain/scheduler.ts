@@ -29,6 +29,7 @@ export function pickDueNotes(
   now: Date,
   count: number,
 ): SpelledNote[] {
+  if (pool.length === 0) return [];
   const due: SpelledNote[] = [];
   const notDue: SpelledNote[] = [];
   for (const note of pool) {
@@ -39,12 +40,19 @@ export function pickDueNotes(
       notDue.push(note);
     }
   }
+
   const selected: SpelledNote[] = [];
-  for (let i = 0; i < count; i++) {
-    const source = due.length > 0 ? due : notDue;
-    if (source.length === 0) break;
-    const index = Math.floor(Math.random() * source.length);
-    selected.push(source.splice(index, 1)[0]);
+  // Prefer unique due cards first so the session starts with variety.
+  while (selected.length < count && due.length > 0) {
+    const index = Math.floor(Math.random() * due.length);
+    selected.push(due.splice(index, 1)[0]);
+  }
+  // If more cards are still needed, sample with replacement from any available
+  // note. This happens when the requested session size exceeds the note pool.
+  const fallback = [...pool];
+  while (selected.length < count && fallback.length > 0) {
+    const index = Math.floor(Math.random() * fallback.length);
+    selected.push(fallback[index]);
   }
   return selected;
 }
@@ -68,7 +76,9 @@ function serializableToCard(obj: unknown): Card {
       card[field] = new Date(value);
     }
   }
-  return card as Card;
+  // Type cast: ts-fsrs Card has private/protected Date fields that our plain
+  // object does not satisfy structurally, so we go through unknown.
+  return card as unknown as Card;
 }
 
 export function serializeProgress(progress: Progress): string {

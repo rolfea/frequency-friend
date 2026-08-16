@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+const CONFIG_KEY = 'frequency-friend:config';
+
 async function openWithConfig(
   page,
   config: Record<string, string | boolean | number>,
 ) {
   await page.goto('/');
   await page.evaluate(
-    (cfg) => localStorage.setItem('frequency-friend:config', JSON.stringify(cfg)),
-    config,
+    ({ key, cfg }) => localStorage.setItem(key, JSON.stringify(cfg)),
+    { key: CONFIG_KEY, cfg: config },
   );
   await page.reload();
   await expect(page.locator('.staff-display svg')).toBeVisible();

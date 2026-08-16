@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+const CONFIG_KEY = 'frequency-friend:config';
+
 test('session size matches configured cardsPerSession even when note pool is smaller', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => {
+  await page.evaluate((key) => {
     localStorage.setItem(
-      'frequency-friend:config',
+      key,
       JSON.stringify({
         floorMidi: 60,
         ceilingMidi: 77,
@@ -13,7 +15,7 @@ test('session size matches configured cardsPerSession even when note pool is sma
       }),
     );
     localStorage.removeItem('frequency-friend:progress');
-  });
+  }, CONFIG_KEY);
   await page.reload();
   await expect(page.locator('.staff-display svg')).toBeVisible();
 

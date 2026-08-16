@@ -46,6 +46,13 @@ describe('pickDueNotes', () => {
     const selected = pickDueNotes(pool, progress, now, 1);
     expect(selected[0].key).toBe(pool[0].key);
   });
+
+  it('fills the session by sampling with replacement when the pool is smaller than the count', () => {
+    const pool = [spellNote(60, 'natural')];
+    const selected = pickDueNotes(pool, emptyProgress(), new Date(), 5);
+    expect(selected).toHaveLength(5);
+    expect(selected.every((n) => n.key === 'C4')).toBe(true);
+  });
 });
 
 describe('serializeProgress / deserializeProgress', () => {

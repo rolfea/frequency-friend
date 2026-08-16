@@ -10,11 +10,11 @@
 ## Todos
 
 - [x] Task 1: Project scaffolding
-- [ ] Task 2: Note domain
-- [ ] Task 3: Scheduler / spaced-repetition wrapper
-- [ ] Task 4: Session logic
-- [ ] Task 5: Storage helpers
-- [ ] Task 6: SVG staff display custom element
-- [ ] Task 7: Settings panel custom element
-- [ ] Task 8: App card and main wiring
-- [ ] Task 9: Build verification and Render deploy prep
+- [x] Task 2: Note domain
+- [x] Task 3: Scheduler / spaced-repetition wrapper
+- [x] Task 4: Session logic
+- [x] Task 5: Storage helpers
+- [x] Task 6: SVG staff display custom element
+- [x] Task 7: Settings panel custom element
+- [x] Task 8: App card and main wiring
+- [x] Task 9: Build verification and Render deploy prep
