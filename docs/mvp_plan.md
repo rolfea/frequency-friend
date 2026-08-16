@@ -70,7 +70,7 @@ frequency-friend/
 - Consumes: none.
 - Produces: build/dev/test entry points and dependencies.
 
-- [ ] **Step 1: Initialize `package.json`**
+- [x] **Step 1: Initialize `package.json`**
 
 ```json
 {
@@ -94,7 +94,7 @@ frequency-friend/
 }
 ```
 
-- [ ] **Step 2: Create `tsconfig.json`**
+- [x] **Step 2: Create `tsconfig.json`**
 
 ```json
 {
@@ -117,7 +117,7 @@ frequency-friend/
 }
 ```
 
-- [ ] **Step 3: Create `vitest.config.ts`**
+- [x] **Step 3: Create `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -130,7 +130,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Create `index.html`**
+- [x] **Step 4: Create `index.html`**
 
 ```html
 <!DOCTYPE html>
@@ -148,7 +148,7 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 5: Create stub CSS and README**
+- [x] **Step 5: Create stub CSS and README**
 
 `style.css`:
 ```css
@@ -194,12 +194,12 @@ npm run dev       # serve with npx serve
 Build with `npm run build`, then deploy the repository root (which serves `index.html` and `dist/`) to Render static sites.
 ```
 
-- [ ] **Step 6: Install dependencies**
+- [x] **Step 6: Install dependencies**
 
 Run: `npm install`
 Expected: `node_modules/` populated, no errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json package-lock.json tsconfig.json vitest.config.ts index.html style.css README.md docs/mvp_plan.md docs/core.md
@@ -228,7 +228,7 @@ git commit -m "chore: scaffold project and document mvp plan"
   - `function midiToDiatonicStep(midi: number): { step: number; octave: number }`
   - `function notePool(config: { floorMidi: number; ceilingMidi: number; includeAccidentals: boolean }): SpelledNote[]`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/domain/note.test.ts`:
 ```ts
@@ -314,12 +314,12 @@ describe('notePool', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/domain/note.test.ts`
 Expected: FAIL — functions not defined or empty implementation.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/domain/note.ts`:
 ```ts
@@ -438,12 +438,12 @@ export function notePool(config: {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/domain/note.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domain/note.ts src/domain/note.test.ts
@@ -469,7 +469,7 @@ git commit -m "feat: add note domain with pitch classes and note pool generation
   - `function serializeProgress(progress: Progress): string`
   - `function deserializeProgress(json: string): Progress`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/domain/scheduler.test.ts`:
 ```ts
@@ -532,12 +532,12 @@ describe('serializeProgress / deserializeProgress', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/domain/scheduler.test.ts`
 Expected: FAIL — functions not defined.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/domain/scheduler.ts`:
 ```ts
@@ -608,12 +608,12 @@ export function deserializeProgress(json: string): Progress {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/domain/scheduler.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domain/scheduler.ts src/domain/scheduler.test.ts
@@ -637,7 +637,7 @@ git commit -m "feat: wrap ts-fsrs scheduler for note review and due-note selecti
   - `function currentNote(session: Session): SpelledNote | null`
   - `function answer(session: Session, progress: Progress, selectedPitchClass: PitchClass, now: Date): { updatedSession: Session; updatedProgress: Progress; wasCorrect: boolean; correctPitchClass: PitchClass }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/domain/session.test.ts`:
 ```ts
@@ -684,12 +684,12 @@ describe('answer', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/domain/session.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/domain/session.ts`:
 ```ts
@@ -755,12 +755,12 @@ export function answer(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/domain/session.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domain/session.ts src/domain/session.test.ts
@@ -784,7 +784,7 @@ git commit -m "feat: add practice session queue with re-quiz on wrong answers"
   - `function loadProgress(): Progress`
   - `function saveProgress(progress: Progress): void`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/storage.test.ts`:
 ```ts
@@ -828,12 +828,12 @@ describe('progress storage', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/storage.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/storage.ts`:
 ```ts
@@ -880,12 +880,12 @@ export function saveProgress(progress: Progress): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/storage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/storage.ts src/storage.test.ts
@@ -905,7 +905,7 @@ git commit -m "feat: add localStorage helpers for config and progress"
 - Consumes: `Note`, `midiToDiatonicStep`, `pitchClassToName` from `src/domain/note.ts`.
 - Produces: `class StaffDisplay extends HTMLElement` registered as `<staff-display>` with `setNote(note: Note)` method.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/components/staff-display.test.ts`:
 ```ts
@@ -934,7 +934,7 @@ describe('staff-display', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/components/staff-display.test.ts`
 Expected: FAIL.
@@ -970,7 +970,7 @@ git commit -m "feat: render staff and notes with VexFlow"
 - Consumes: `Config` from `src/domain/note.ts`.
 - Produces: `class SettingsPanel extends HTMLElement` registered as `<settings-panel>` with `setConfig(config: Config)` and `onSave(callback: (config: Config) => void)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/components/settings-panel.test.ts`:
 ```ts
@@ -1011,12 +1011,12 @@ describe('settings-panel', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/components/settings-panel.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/components/settings-panel.ts`:
 ```ts
@@ -1102,12 +1102,12 @@ class SettingsPanel extends HTMLElement {
 customElements.define('settings-panel', SettingsPanel);
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/components/settings-panel.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/settings-panel.ts src/components/settings-panel.test.ts
@@ -1130,7 +1130,7 @@ git commit -m "feat: add settings panel custom element"
 - Consumes: all prior modules.
 - Produces: A working single-page app rendered by `<app-card>`.
 
-- [ ] **Step 1: Write the failing test for answer-buttons**
+- [x] **Step 1: Write the failing test for answer-buttons**
 
 `src/components/answer-buttons.ts` (presentational, no test file required) will expose `setOptions(options: { pitchClass: number; label: string }[])` and `onSelect(callback: (pitchClass: number) => void)`.
 
@@ -1189,12 +1189,12 @@ describe('renderApp', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/main.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/components/app-card.ts`:
 ```ts
@@ -1352,7 +1352,7 @@ if (typeof window !== 'undefined') {
 }
 ```
 
-- [ ] **Step 4: Add minimal CSS**
+- [x] **Step 4: Add minimal CSS**
 
 Append to `style.css`:
 ```css
@@ -1438,12 +1438,12 @@ Append to `style.css`:
 }
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `npx vitest run`
 Expected: PASS.
 
-- [ ] **Step 6: Build and smoke test**
+- [x] **Step 6: Build and smoke test**
 
 Run: `npm run build`
 Expected: `dist/` produced with no TypeScript errors.
@@ -1451,7 +1451,7 @@ Expected: `dist/` produced with no TypeScript errors.
 Run: `npm run dev` and open the served URL in a browser.
 Expected: App renders, shows a note, answer buttons work, settings panel toggles.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/app-card.ts src/components/answer-buttons.ts src/main.ts src/main.test.ts style.css
@@ -1471,12 +1471,12 @@ git commit -m "feat: wire app card, answer buttons, and main entry point"
 - Consumes: `dist/` and `index.html`.
 - Produces: Deployable static site.
 
-- [ ] **Step 1: Verify build output is served correctly**
+- [x] **Step 1: Verify build output is served correctly**
 
 Run: `npm run build && npx serve .`
 Expected: `index.html` loads `dist/main.js` and `style.css` without 404s.
 
-- [ ] **Step 2: Add Render static site instructions**
+- [x] **Step 2: Add Render static site instructions**
 
 Append to `README.md`:
 ```markdown
@@ -1490,7 +1490,7 @@ Append to `README.md`:
 4. Click deploy.
 ```
 
-- [ ] **Step 3: Add `.gitignore`**
+- [x] **Step 3: Add `.gitignore`**
 
 Create `.gitignore`:
 ```gitignore
@@ -1500,7 +1500,7 @@ dist/
 .DS_Store
 ```
 
-- [ ] **Step 4: Final test run and commit**
+- [x] **Step 4: Final test run and commit**
 
 Run: `npx vitest run`
 Expected: PASS.
@@ -1518,7 +1518,7 @@ git commit -m "docs: add render deploy instructions and ignore build artifacts"
 
 ## Self-Review
 
-- [ ] **Spec coverage:** Each requirement in `docs/core.md` maps to a task:
+- [x] **Spec coverage:** Each requirement in `docs/core.md` maps to a task:
   - Treble staff SVG rendering → Task 6.
   - Pitch-letter answers → Tasks 7/8.
   - Spaced-repetition engine → Task 3.
@@ -1526,5 +1526,5 @@ git commit -m "docs: add render deploy instructions and ignore build artifacts"
   - Config (range, accidentals, count) → Task 7/8.
   - localStorage persistence → Task 5.
   - Tests and deployment → Tasks 2–9.
-- [ ] **Placeholder scan:** No TBD/TODO/fill-in steps remain.
-- [ ] **Type consistency:** `Config`, `Note`, `PitchClass`, `Progress`, and `Session` types are used consistently across tasks.
+- [x] **Placeholder scan:** No TBD/TODO/fill-in steps remain.
+- [x] **Type consistency:** `Config`, `Note`, `PitchClass`, `Progress`, and `Session` types are used consistently across tasks.

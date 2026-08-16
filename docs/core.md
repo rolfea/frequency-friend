@@ -57,11 +57,12 @@ The same goes for CSS - just use vanilla CSS, aim for plain, readable, simple im
 | Local dev server | `npx serve` |
 | Deploy target | Render static sites |
 | Unit tests | `vitest`, co-located with source as `src/**/*.test.ts` |
-| E2E tests | Playwright, fast-follow after MVP |
+| E2E tests | Playwright |
+| CI | GitHub Actions |
 
 ## Architecture
 
-A single-page browser app. State lives in a small module owned by `main.ts`. Domain logic is pure and lives under `src/domain/`. The UI is built with plain DOM and a few custom elements where they help isolate structure; these elements are stateless/presentational and are driven by props from `main.ts`.
+A single-page browser app. State lives in the `<app-card>` custom element, which loads `Config` and `Progress` from `storage.ts` and drives the presentational custom elements. Domain logic is pure and lives under `src/domain/`. The UI is built with plain DOM and a few custom elements where they help isolate structure; these elements are stateless/presentational and are driven by props from `<app-card>`.
 
 ## File Structure
 
@@ -71,10 +72,11 @@ frequency-friend/
 │   ├── core.md          # this document
 │   └── mvp_plan.md      # implementation plan
 ├── src/
-│   ├── main.ts          # app bootstrap, central state, event wiring
+│   ├── main.ts          # app bootstrap
 │   ├── main.test.ts
 │   ├── components/
 │   │   ├── app-card.ts      # root practice-card custom element
+│   │   ├── answer-buttons.ts
 │   │   ├── staff-display.ts # SVG staff + note custom element
 │   │   └── settings-panel.ts # settings form custom element
 │   ├── domain/
@@ -86,10 +88,18 @@ frequency-friend/
 │   │   └── scheduler.test.ts
 │   ├── storage.ts       # localStorage read/write helpers
 │   └── storage.test.ts
+├── tests/e2e/           # Playwright end-to-end tests
+│   ├── smoke.spec.ts
+│   ├── staff.spec.ts
+│   ├── session.spec.ts
+│   └── spaced-repetition.spec.ts
 ├── style.css
 ├── index.html
 ├── tsconfig.json
 ├── package.json
+├── playwright.config.ts
+├── render.yaml          # Render Blueprint
+├── .github/workflows/ci.yml
 └── README.md
 ```
 
@@ -104,12 +114,13 @@ frequency-friend/
 
 ## Components & Flow
 
-1. `main.ts` loads `Config` and `Progress` from `storage.ts`, builds the note pool with `note.ts`, and asks `scheduler.ts` which notes are due.
-2. `session.ts` creates a queue of the requested length, injecting failed notes again later in the session.
-3. `staff-display.ts` receives a `Note` and renders the treble clef, staff, note head, ledger lines, and accidental as SVG.
-4. The answer UI shows the set of possible pitch-class buttons (7 when accidentals are off, 12 when on).
-5. On answer: compare selected pitch class to the note, show feedback, update the `ts-fsrs` card state via `scheduler.ts`, and persist progress.
-6. Settings panel toggles open over the practice view and writes `Config` back to `storage.ts`.
+1. `main.ts` mounts the `<app-card>` custom element.
+2. `app-card.ts` loads `Config` and `Progress` from `storage.ts`, builds the note pool with `note.ts`, and asks `scheduler.ts` which notes are due.
+3. `session.ts` creates a queue of the requested length, injecting failed notes again later in the session.
+4. `staff-display.ts` receives a `SpelledNote` and renders the treble clef, staff, note head, ledger lines, and accidental as SVG.
+5. The answer UI shows the set of possible pitch-class buttons (7 when accidentals are off, 12 when on).
+6. On answer: compare selected pitch class to the note, show feedback, update the `ts-fsrs` card state via `scheduler.ts`, and persist progress.
+7. Settings panel toggles open over the practice view and writes `Config` back to `storage.ts`.
 
 ## Rendering
 
@@ -140,16 +151,19 @@ Progress is serialized to `localStorage` as JSON after each review.
 
 ## Testing
 
-- `vitest` runs unit tests for pure domain modules.
+- `vitest` runs unit tests for pure domain modules and custom elements.
 - Each `.test.ts` file lives next to the module it tests.
-- Tests cover: note pool generation, range filtering, enharmonic display, session queue construction, re-quiz behavior, scheduler rating transitions, and localStorage serialization.
+- `playwright` runs end-to-end tests under `tests/e2e/`, covering first-load rendering, staff notation (ledger lines, accidentals), settings round-trips, session sizing, and spaced-repetition scheduling behavior.
+- GitHub Actions runs the full suite (build + unit tests + e2e tests) on every push/PR to `main`.
 
 ## Deployment
 
-Render static sites:
-1. `npm install`
-2. `npm run build` (`tsc`)
-3. Publish the repository root (`index.html`, `style.css`, and `dist/`) as the static site.
+Two ways to deploy:
+
+1. **Render Blueprint** (recommended): `render.yaml` at the repo root defines a static site service. In the Render Dashboard, create a new Blueprint from this repo and Render will provision the site automatically.
+2. **Manual static site**: connect the repo to a new Render static site and set:
+   - **Build command:** `npm install && npm run build`
+   - **Publish directory:** `.` (root)
 
 ## Future Phases
 
