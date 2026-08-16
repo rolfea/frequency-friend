@@ -11,6 +11,7 @@ export const DEFAULT_CONFIG: Config = {
   sessionMode: 'cards',
   cardsPerSession: 10,
   sessionDurationMinutes: 5,
+  showFingerings: false,
 };
 
 export function loadConfig(): Config {
@@ -28,6 +29,7 @@ export function loadConfig(): Config {
     let sessionDurationMinutes = Number.isFinite(parsed.sessionDurationMinutes) ? parsed.sessionDurationMinutes : DEFAULT_CONFIG.sessionDurationMinutes;
     sessionDurationMinutes = Math.max(1, sessionDurationMinutes);
     const sessionMode = parsed.sessionMode === 'minutes' ? 'minutes' : 'cards';
+    const showFingerings = Boolean(parsed.showFingerings);
     return {
       ...DEFAULT_CONFIG,
       ...parsed,
@@ -36,6 +38,7 @@ export function loadConfig(): Config {
       sessionMode,
       cardsPerSession,
       sessionDurationMinutes,
+      showFingerings,
     };
   } catch {
     return DEFAULT_CONFIG;

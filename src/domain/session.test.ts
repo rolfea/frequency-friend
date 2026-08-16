@@ -1,37 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import { createSession, currentNote, answer, formatRemainingTime } from './session.js';
 import { emptyProgress, reviewNote } from './scheduler.js';
-import { spellNote } from './note.js';
+import { spellNote, type Config } from './note.js';
 
 describe('createSession', () => {
+  function baseConfig(overrides?: Partial<Config>): Config {
+    return {
+      floorMidi: 60,
+      ceilingMidi: 71,
+      includeAccidentals: false,
+      sessionMode: 'cards',
+      cardsPerSession: 5,
+      sessionDurationMinutes: 5,
+      showFingerings: false,
+      ...overrides,
+    };
+  }
+
   it('builds a queue of the requested length', () => {
-    const session = createSession(
-      { floorMidi: 60, ceilingMidi: 71, includeAccidentals: false, sessionMode: 'cards', cardsPerSession: 5, sessionDurationMinutes: 5 },
-      emptyProgress(),
-      new Date(),
-    );
+    const session = createSession(baseConfig(), emptyProgress(), new Date());
     expect(session.queue).toHaveLength(5);
     expect(session.currentIndex).toBe(0);
   });
 
   it('records an end time when mode is minutes', () => {
     const now = new Date('2024-01-01T12:00:00Z');
-    const session = createSession(
-      { floorMidi: 60, ceilingMidi: 71, includeAccidentals: false, sessionMode: 'minutes', cardsPerSession: 10, sessionDurationMinutes: 3 },
-      emptyProgress(),
-      now,
-    );
+    const session = createSession(baseConfig({ sessionMode: 'minutes', cardsPerSession: 10, sessionDurationMinutes: 3 }), emptyProgress(), now);
     expect(session.endTime).toEqual(new Date('2024-01-01T12:03:00Z'));
   });
 });
 
 describe('answer', () => {
+  function baseConfig(overrides?: Partial<Config>): Config {
+    return {
+      floorMidi: 60,
+      ceilingMidi: 62,
+      includeAccidentals: false,
+      sessionMode: 'cards',
+      cardsPerSession: 3,
+      sessionDurationMinutes: 5,
+      showFingerings: false,
+      ...overrides,
+    };
+  }
+
   it('marks a correct answer and advances', () => {
-    const session = createSession(
-      { floorMidi: 60, ceilingMidi: 62, includeAccidentals: false, sessionMode: 'cards', cardsPerSession: 3, sessionDurationMinutes: 5 },
-      emptyProgress(),
-      new Date(),
-    );
+    const session = createSession(baseConfig(), emptyProgress(), new Date());
     const note = currentNote(session)!;
     const result = answer(session, emptyProgress(), note.pitchClass, new Date());
     expect(result).not.toBeNull();
@@ -40,11 +54,7 @@ describe('answer', () => {
   });
 
   it('inserts an incorrect note later in the queue', () => {
-    const session = createSession(
-      { floorMidi: 60, ceilingMidi: 64, includeAccidentals: false, sessionMode: 'cards', cardsPerSession: 3, sessionDurationMinutes: 5 },
-      emptyProgress(),
-      new Date(),
-    );
+    const session = createSession(baseConfig({ ceilingMidi: 64 }), emptyProgress(), new Date());
     const note = currentNote(session)!;
     const wrong = ((note.pitchClass + 1) % 12) as typeof note.pitchClass;
     const result = answer(session, emptyProgress(), wrong, new Date());
@@ -54,7 +64,7 @@ describe('answer', () => {
 
   it('returns null when the session is exhausted', () => {
     const session = createSession(
-      { floorMidi: 60, ceilingMidi: 60, includeAccidentals: false, sessionMode: 'cards', cardsPerSession: 1, sessionDurationMinutes: 5 },
+      baseConfig({ ceilingMidi: 60, cardsPerSession: 1 }),
       emptyProgress(),
       new Date(),
     );

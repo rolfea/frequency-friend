@@ -2,11 +2,14 @@ import type { Config, PitchClass, SpelledNote } from '../domain/note.js';
 import { createSession, currentNote, answer, formatRemainingTime } from '../domain/session.js';
 import { loadConfig, loadProgress, saveConfig, saveProgress } from '../storage.js';
 import { pitchClassToName } from '../domain/note.js';
+import { fingeringForNote, fingeringOptions, formatFingering, isCorrectFingering, type Fingering } from '../domain/fingering.js';
 import type StaffDisplay from './staff-display.js';
 import type AnswerButtons from './answer-buttons.js';
+import type FingeringButtons from './fingering-buttons.js';
 import type SettingsPanel from './settings-panel.js';
 import './staff-display.js';
 import './answer-buttons.js';
+import './fingering-buttons.js';
 import './settings-panel.js';
 
 class AppCard extends HTMLElement {
@@ -14,6 +17,8 @@ class AppCard extends HTMLElement {
   private progress = loadProgress();
   private session = createSession(this.config, this.progress, new Date());
   private timerHandle: number | null = null;
+  private phase: 'pitch' | 'fingering' = 'pitch';
+  private pendingFingeringNote: SpelledNote | null = null;
 
   connectedCallback(): void {
     this.render();
@@ -36,17 +41,20 @@ class AppCard extends HTMLElement {
         <staff-display class="app-card__staff"></staff-display>
         <div class="app-card__feedback" aria-live="polite"></div>
         <answer-buttons class="app-card__answers"></answer-buttons>
+        <fingering-buttons class="app-card__fingerings app-card__fingerings--hidden"></fingering-buttons>
         <settings-panel class="app-card__settings app-card__settings--hidden"></settings-panel>
       </section>
     `;
 
     const staff = this.querySelector('staff-display')! as unknown as StaffDisplay;
     const answers = this.querySelector('answer-buttons')! as unknown as AnswerButtons;
+    const fingerings = this.querySelector('fingering-buttons')! as unknown as FingeringButtons;
     const feedback = this.querySelector('.app-card__feedback')!;
     const settingsPanel = this.querySelector('settings-panel')! as unknown as SettingsPanel;
     const toggle = this.querySelector('.app-card__settings-toggle')!;
 
     this.updateAnswerButtons();
+    fingerings.setOptions(fingeringOptions());
 
     answers.onSelect((pitchClass: PitchClass) => {
       const now = new Date();
@@ -74,10 +82,41 @@ class AppCard extends HTMLElement {
       this.updateStats();
       answers.setEnabled(false);
 
+      if (this.config.showFingerings) {
+        this.pendingFingeringNote = note;
+        this.phase = 'fingering';
+        setTimeout(() => this.showFingeringStep(), 1200);
+        return;
+      }
+
       setTimeout(() => {
         if (currentNote(this.session)) {
           this.showCurrentNote();
           answers.setEnabled(true);
+          feedback.textContent = '';
+        } else {
+          this.showSummary();
+        }
+      }, 1200);
+    });
+
+    fingerings.onSelect((valves: Fingering) => {
+      const note = this.pendingFingeringNote;
+      if (!note) return;
+      const wasCorrect = isCorrectFingering(note, valves);
+      const correctLabel = formatFingering(fingeringForNote(note));
+      feedback.textContent = wasCorrect
+        ? 'Correct fingering!'
+        : `Incorrect fingering. The correct fingering was ${correctLabel}.`;
+      feedback.className = `app-card__feedback app-card__feedback--${wasCorrect ? 'correct' : 'incorrect'}`;
+      fingerings.setEnabled(false);
+
+      setTimeout(() => {
+        this.phase = 'pitch';
+        this.pendingFingeringNote = null;
+        if (currentNote(this.session)) {
+          this.showCurrentNote();
+          fingerings.setEnabled(true);
           feedback.textContent = '';
         } else {
           this.showSummary();
@@ -90,6 +129,8 @@ class AppCard extends HTMLElement {
       this.config = config;
       saveConfig(config);
       this.session = createSession(this.config, this.progress, new Date());
+      this.phase = 'pitch';
+      this.pendingFingeringNote = null;
       settingsPanel.classList.add('app-card__settings--hidden');
       settingsPanel.setConfig(this.config);
       this.showCurrentNote();
@@ -108,11 +149,47 @@ class AppCard extends HTMLElement {
       this.showSummary();
       return;
     }
+    this.phase = 'pitch';
     const staff = this.querySelector('staff-display') as unknown as StaffDisplay;
     staff.setNote(note);
     this.updateAnswerButtons();
     this.updateStats();
     this.startTimer();
+
+    const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
+    const fingerings = this.querySelector('fingering-buttons') as unknown as FingeringButtons | null;
+    const hint = this.querySelector('.app-card__hint');
+    const feedback = this.querySelector('.app-card__feedback');
+    if (answers) {
+      answers.classList.remove('app-card__answers--hidden');
+      answers.setEnabled(true);
+    }
+    if (fingerings) {
+      fingerings.classList.add('app-card__fingerings--hidden');
+    }
+    if (hint) {
+      hint.textContent = 'Name the pitch!';
+      hint.classList.remove('app-card__hint--hidden');
+    }
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.className = 'app-card__feedback';
+    }
+  }
+
+  private showFingeringStep(): void {
+    const answers = this.querySelector('answer-buttons') as unknown as AnswerButtons | null;
+    const fingerings = this.querySelector('fingering-buttons') as unknown as FingeringButtons | null;
+    const hint = this.querySelector('.app-card__hint');
+    if (answers) answers.classList.add('app-card__answers--hidden');
+    if (fingerings) {
+      fingerings.classList.remove('app-card__fingerings--hidden');
+      fingerings.setEnabled(true);
+    }
+    if (hint) {
+      hint.textContent = 'Now pick the fingering!';
+      hint.classList.remove('app-card__hint--hidden');
+    }
   }
 
   private updateAnswerButtons(): void {
@@ -196,6 +273,8 @@ class AppCard extends HTMLElement {
     `;
     this.querySelector('.app-card__restart')!.addEventListener('click', () => {
       this.session = createSession(this.config, this.progress, new Date());
+      this.phase = 'pitch';
+      this.pendingFingeringNote = null;
       this.render();
       this.showCurrentNote();
     });

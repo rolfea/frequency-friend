@@ -16,6 +16,7 @@ describe('settings-panel', () => {
       sessionMode: 'cards',
       cardsPerSession: 10,
       sessionDurationMinutes: 5,
+      showFingerings: false,
       ...overrides,
     };
   }
@@ -50,5 +51,12 @@ describe('settings-panel', () => {
     el.setConfig(baseConfig({ sessionMode: 'minutes', sessionDurationMinutes: 10 }));
     expect((el.querySelector('[name="sessionMode"]') as HTMLSelectElement).value).toBe('minutes');
     expect((el.querySelector('[name="sessionDurationMinutes"]') as HTMLSelectElement).value).toBe('10');
+  });
+
+  it('exposes the fingerings toggle', () => {
+    document.body.innerHTML = '<settings-panel></settings-panel>';
+    const el = document.querySelector('settings-panel')! as unknown as SettingsPanel;
+    el.setConfig(baseConfig({ showFingerings: true }));
+    expect((el.querySelector('[name="showFingerings"]') as HTMLInputElement).checked).toBe(true);
   });
 });

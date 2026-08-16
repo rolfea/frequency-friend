@@ -45,6 +45,10 @@ class SettingsPanel extends HTMLElement {
             <option value="10">10</option>
           </select>
         </label>
+        <label class="settings-panel__field">
+          <span>Show trumpet fingerings</span>
+          <input name="showFingerings" type="checkbox" class="settings-panel__checkbox">
+        </label>
         <button type="submit" class="settings-panel__button">Save</button>
       </form>
     `;
@@ -69,6 +73,7 @@ class SettingsPanel extends HTMLElement {
     (form.elements.namedItem('sessionMode') as HTMLSelectElement).value = config.sessionMode;
     (form.elements.namedItem('cardsPerSession') as HTMLInputElement).value = String(config.cardsPerSession);
     (form.elements.namedItem('sessionDurationMinutes') as HTMLSelectElement).value = String(config.sessionDurationMinutes);
+    (form.elements.namedItem('showFingerings') as HTMLInputElement).checked = config.showFingerings;
     this.updateFieldVisibility();
   }
 
@@ -117,6 +122,7 @@ class SettingsPanel extends HTMLElement {
       sessionMode,
       cardsPerSession,
       sessionDurationMinutes,
+      showFingerings: (form.elements.namedItem('showFingerings') as HTMLInputElement).checked,
     };
   }
 }

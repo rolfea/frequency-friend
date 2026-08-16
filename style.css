@@ -105,7 +105,39 @@ body {
   background: #f3f4f6;
 }
 
-.answer-buttons__button:disabled {
+.app-card__answers--hidden,
+.app-card__fingerings--hidden {
+  display: none;
+}
+
+.fingering-buttons__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 400px) {
+  .fingering-buttons__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.fingering-buttons__button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.2;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fingering-buttons__button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.fingering-buttons__button:disabled {
   opacity: 0.5;
   cursor: default;
 }
