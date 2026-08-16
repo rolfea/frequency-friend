@@ -1,0 +1,5 @@
+services:
+  - type: static
+    name: frequency-friend
+    buildCommand: npm install && npm run build
+    publishDir: .
