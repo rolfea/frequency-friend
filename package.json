@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "dev": "npx serve .",
+    "build": "tsc \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs dist/ts-fsrs.mjs \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs.map dist/ts-fsrs.mjs.map",
+    "dev": "npm run build \u0026\u0026 npx serve .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
