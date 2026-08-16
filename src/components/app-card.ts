@@ -27,6 +27,7 @@ class AppCard extends HTMLElement {
           <button class="app-card__settings-toggle" type="button">Settings</button>
         </header>
         <div class="app-card__stats"></div>
+        <p class="app-card__hint" aria-live="polite">Name the pitch!</p>
         <staff-display class="app-card__staff"></staff-display>
         <div class="app-card__feedback" aria-live="polite"></div>
         <answer-buttons class="app-card__answers"></answer-buttons>
@@ -59,6 +60,11 @@ class AppCard extends HTMLElement {
         ? 'Correct!'
         : `Incorrect. The correct answer was ${correctName}.`;
       feedback.className = `app-card__feedback app-card__feedback--${result.wasCorrect ? 'correct' : 'incorrect'}`;
+
+      const hint = this.querySelector('.app-card__hint');
+      if (hint) {
+        hint.classList.add('app-card__hint--hidden');
+      }
 
       this.updateStats();
       answers.setEnabled(false);

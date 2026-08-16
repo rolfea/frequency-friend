@@ -17,6 +17,7 @@ test.beforeEach(async ({ page }) => {
 test('renders the app with title and answer buttons', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Frequency Friend');
   await expect(page.locator('.answer-buttons__button')).toHaveCount(7);
+  await expect(page.locator('.app-card__hint')).toHaveText('Name the pitch!');
 
   const stats = page.locator('.app-card__stats');
   await expect(stats).toContainText('10 remaining');

@@ -48,6 +48,20 @@ body {
 .app-card__feedback {
   min-height: 1.5rem;
   font-weight: 600;
+  text-align: center;
+}
+
+.app-card__hint {
+  margin: 0;
+  font-size: 1.125rem;
+  text-align: center;
+  color: var(--color-accent);
+  transition: opacity 0.2s ease;
+}
+
+.app-card__hint--hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .app-card__feedback--correct {
@@ -60,8 +74,20 @@ body {
 
 .answer-buttons__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 0.5rem;
+}
+
+@media (min-width: 400px) {
+  .answer-buttons__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 560px) {
+  .answer-buttons__grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }
 
 .answer-buttons__button {
