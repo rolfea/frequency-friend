@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "tsc \u0026\u0026 rm -rf dist/vexflow \u0026\u0026 cp -r node_modules/vexflow/build/esm dist/vexflow \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs dist/ts-fsrs.mjs \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs.map dist/ts-fsrs.mjs.map",
-    "dev": "npm run build \u0026\u0026 npx serve .",
+    "build": "tsc && rm -rf dist/vexflow && cp -r node_modules/vexflow/build/esm dist/vexflow && cp node_modules/ts-fsrs/dist/index.mjs dist/ts-fsrs.mjs && cp node_modules/ts-fsrs/dist/index.mjs.map dist/ts-fsrs.mjs.map",
+    "dev": "npm run build && npx serve .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "jsdom": "^24.0.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
