@@ -11,6 +11,11 @@ npm run build     # compile TypeScript to dist/
 npm run dev       # serve with npx serve
 ```
 
-## Deploy
+## Deploy to Render
 
-Build with `npm run build`, then deploy the repository root (which serves `index.html`, `style.css`, and `dist/`) to Render static sites.
+1. Create a new static site on Render.
+2. Connect this repository.
+3. Set:
+   - **Build command:** `npm install && npm run build`
+   - **Publish directory:** `.` (root)
+4. Click deploy.
