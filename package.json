@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "tsc \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs dist/ts-fsrs.mjs \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs.map dist/ts-fsrs.mjs.map",
+    "build": "tsc \u0026\u0026 rm -rf dist/vexflow \u0026\u0026 cp -r node_modules/vexflow/build/esm dist/vexflow \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs dist/ts-fsrs.mjs \u0026\u0026 cp node_modules/ts-fsrs/dist/index.mjs.map dist/ts-fsrs.mjs.map",
     "dev": "npm run build \u0026\u0026 npx serve .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "jsdom": "^24.0.0",
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0",
-    "jsdom": "^24.0.0"
+    "vitest": "^2.0.0"
   },
   "dependencies": {
-    "ts-fsrs": "^5.4.0"
+    "ts-fsrs": "^5.4.0",
+    "vexflow": "^5.0.0"
   }
 }
