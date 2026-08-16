@@ -173,3 +173,10 @@ Features captured but not in the MVP:
 - Trumpet mode: B♭ transposition, fingering diagrams, fingering answer option.
 - Long-tone mode: count-in metronome, microphone input, hold-time tracking.
 - Accounts and cross-device sync.
+
+## Recent Changes
+
+- **2025-08-16**: Added trumpet fingering two-step drill. A "Show trumpet fingerings" setting adds a fingering answer step after naming the pitch. The target fingering and answer choices are rendered as SVG valve diagrams. This feature has been unit and e2e tested locally, but has not yet been verified in production by a human.
+- **2025-08-16**: Added time-boxed practice sessions (cards vs. minutes presets, live countdown, auto-end on expiry).
+- **2025-08-16**: Added onboarding hint and responsive answer-grid layout for 12 pitch-class buttons.
+- **2025-08-16**: Fixed config normalization (floor/ceiling swap, `cardsPerSession` clamp) and removed jsdom canvas noise during unit tests.
