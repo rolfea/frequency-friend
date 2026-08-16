@@ -1,5 +1,5 @@
 import type { SpelledNote } from '../domain/note.js';
-import { Formatter, Renderer, Stave, StaveNote } from 'vexflow';
+import { Formatter, Renderer, Stave, StaveNote, Voice } from 'vexflow';
 
 class StaffDisplay extends HTMLElement {
   private container: HTMLDivElement;
@@ -36,7 +36,12 @@ class StaffDisplay extends HTMLElement {
       autoStem: true,
     });
 
-    Formatter.FormatAndDraw(context, stave, [staveNote]);
+    // Use a single-note Voice formatted to the stave. This positions one note
+    // cleanly without the measure-wide spacing that FormatAndDraw applies.
+    const voice = new Voice({ numBeats: 1, beatValue: 4 });
+    voice.addTickable(staveNote);
+    new Formatter().joinVoices([voice]).formatToStave([voice], stave);
+    voice.draw(context, stave);
   }
 
   private vexflowKey(note: SpelledNote): string {
