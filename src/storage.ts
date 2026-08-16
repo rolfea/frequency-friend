@@ -6,7 +6,7 @@ const PROGRESS_KEY = 'frequency-friend:progress';
 
 export const DEFAULT_CONFIG: Config = {
   floorMidi: 60, // C4
-  ceilingMidi: 79, // G5
+  ceilingMidi: 77, // F5 (top line of treble staff)
   includeAccidentals: false,
   cardsPerSession: 10,
 };

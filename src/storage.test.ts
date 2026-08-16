@@ -9,7 +9,7 @@ describe('config storage', () => {
   it('returns defaults when nothing is stored', () => {
     const config = loadConfig();
     expect(config.floorMidi).toBe(60);
-    expect(config.ceilingMidi).toBe(79);
+    expect(config.ceilingMidi).toBe(77);
     expect(config.includeAccidentals).toBe(false);
     expect(config.cardsPerSession).toBe(10);
   });

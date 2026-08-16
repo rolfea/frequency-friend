@@ -130,7 +130,7 @@ Settings panel exposes:
 - Include accidentals toggle (when off, only natural notes A–G appear; when on, all 12 pitch classes appear).
 - Cards per session.
 
-Defaults: C4 to G5, accidentals off, 10 cards.
+Defaults: C4 to F5, accidentals off, 10 cards.
 
 ## Answer Buttons
 

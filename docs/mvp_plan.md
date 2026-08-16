@@ -1082,7 +1082,7 @@ describe('settings-panel', () => {
   it('renders inputs from config', () => {
     document.body.innerHTML = '<settings-panel></settings-panel>';
     const el = document.querySelector('settings-panel')!;
-    const config: Config = { floorMidi: 60, ceilingMidi: 79, includeAccidentals: false, cardsPerSession: 10 };
+    const config: Config = { floorMidi: 60, ceilingMidi: 77, includeAccidentals: false, cardsPerSession: 10 };
     el.setConfig(config);
     expect(el.querySelector('form')).not.toBeNull();
   });
@@ -1090,7 +1090,7 @@ describe('settings-panel', () => {
   it('calls onSave with updated config', () => {
     document.body.innerHTML = '<settings-panel></settings-panel>';
     const el = document.querySelector('settings-panel')!;
-    const config: Config = { floorMidi: 60, ceilingMidi: 79, includeAccidentals: false, cardsPerSession: 10 };
+    const config: Config = { floorMidi: 60, ceilingMidi: 77, includeAccidentals: false, cardsPerSession: 10 };
     el.setConfig(config);
     const handler = vi.fn();
     el.onSave(handler);

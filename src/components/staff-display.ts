@@ -56,18 +56,16 @@ class StaffDisplay extends HTMLElement {
     const step = midiToDiatonicStep(note.midi);
     const y = MIDDLE_LINE_Y - step.step * (LINE_SPACING / 2);
 
-    // Ledger lines for line notes outside the staff (even steps outside [0, 8]).
+    // Ledger lines extend the staff for line notes outside the [0, 8] range.
     const isLine = step.step % 2 === 0;
-    const isOutsideStaff = step.step < 0 || step.step > 8;
-    if (isLine && isOutsideStaff) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(CENTER_X - 14));
-      line.setAttribute('x2', String(CENTER_X + 14));
-      line.setAttribute('y1', String(y));
-      line.setAttribute('y2', String(y));
-      line.setAttribute('stroke', 'currentColor');
-      line.setAttribute('stroke-width', '1');
-      this.svg.appendChild(line);
+    if (isLine && step.step > 8) {
+      for (let lineStep = 10; lineStep <= step.step; lineStep += 2) {
+        this.drawLedgerLine(lineStep);
+      }
+    } else if (isLine && step.step < 0) {
+      for (let lineStep = -2; lineStep >= step.step; lineStep -= 2) {
+        this.drawLedgerLine(lineStep);
+      }
     }
 
     // Note head
@@ -91,6 +89,21 @@ class StaffDisplay extends HTMLElement {
       this.svg.appendChild(accidental);
     }
   }
+
+  private drawLedgerLine(step: number): void {
+    const y = MIDDLE_LINE_Y - step * (LINE_SPACING / 2);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', String(CENTER_X - 14));
+    line.setAttribute('x2', String(CENTER_X + 14));
+    line.setAttribute('y1', String(y));
+    line.setAttribute('y2', String(y));
+    line.setAttribute('stroke', 'currentColor');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('class', 'staff-display__ledger-line');
+    this.svg.appendChild(line);
+  }
 }
 
 customElements.define('staff-display', StaffDisplay);
+
+export default StaffDisplay;
