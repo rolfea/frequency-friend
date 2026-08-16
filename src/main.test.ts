@@ -7,8 +7,8 @@ describe('renderApp', () => {
     localStorage.clear();
   });
 
-  it('mounts an app-card element', () => {
-    renderApp(document.body);
+  it('mounts an app-card element', async () => {
+    await renderApp(document.body);
     expect(document.querySelector('app-card')).not.toBeNull();
   });
 });
