@@ -9,7 +9,7 @@ const DIAGRAM_PROPS = {
   casingStroke: 3,
   valveRadius: 14,
   valveStroke: 2,
-  valveCy: [50, 90, 130] as [number, number, number],
+  valveCy: [130, 90, 50] as [number, number, number],
   classPrefix: 'fingering-diagram',
 };
 

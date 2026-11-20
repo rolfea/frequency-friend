@@ -156,9 +156,8 @@ class AppCard extends HTMLElement {
     if (answers) answers.classList.add('app-card__answers--hidden');
     if (diagram) {
       diagram.classList.remove('app-card__diagram--hidden');
-      if (this.pendingFingeringNote) {
-        diagram.setFingering(fingeringForNote(this.pendingFingeringNote));
-      }
+      // Keep the target diagram blank until the user answers.
+      diagram.setFingering([0, 0, 0]);
     }
     if (fingeringOptionsEl) {
       fingeringOptionsEl.classList.remove('app-card__fingering-options--hidden');

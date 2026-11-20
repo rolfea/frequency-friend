@@ -9,7 +9,7 @@ const OPTION_PROPS = {
   casingStroke: 3,
   valveRadius: 11,
   valveStroke: 2,
-  valveCy: [28, 50, 72] as [number, number, number],
+  valveCy: [72, 50, 28] as [number, number, number],
   classPrefix: 'fingering-option',
 };
 

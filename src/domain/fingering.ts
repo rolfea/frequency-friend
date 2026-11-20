@@ -1,20 +1,37 @@
 import type { SpelledNote } from './note.js';
 
-// Standard B♭ trumpet fingerings indexed by pitch class.
+// Standard B♭ trumpet fingerings by pitch class for lower and upper registers.
 // Each tuple is [valve1, valve2, valve3] where 1 means depressed.
-const FINGERINGS_BY_PITCH_CLASS: Record<number, [number, number, number]> = {
+// Lower register: octaves 3 and 4 (written pitch, below staff to one-line octave).
+// Upper register: octaves 5 and above.
+const LOWER_REGISTER_FINGERINGS: Record<number, [number, number, number]> = {
   0: [0, 0, 0],  // C
-  1: [1, 0, 1],  // C♯/D♭
-  2: [1, 0, 0],  // D
-  3: [1, 1, 0],  // D♯/E♭
-  4: [0, 1, 0],  // E
-  5: [0, 0, 1],  // F
-  6: [0, 1, 1],  // F♯/G♭
+  1: [1, 1, 1],  // C♯/D♭
+  2: [1, 0, 1],  // D
+  3: [0, 1, 1],  // D♯/E♭
+  4: [1, 1, 0],  // E
+  5: [1, 0, 0],  // F
+  6: [0, 1, 0],  // F♯/G♭
   7: [0, 0, 0],  // G
-  8: [1, 0, 0],  // G♯/A♭
-  9: [0, 1, 0],  // A
-  10: [1, 0, 1], // A♯/B♭
-  11: [1, 1, 0], // B
+  8: [0, 1, 1],  // G♯/A♭
+  9: [1, 1, 0],  // A
+  10: [1, 0, 0], // A♯/B♭
+  11: [0, 1, 0], // B
+};
+
+const UPPER_REGISTER_FINGERINGS: Record<number, [number, number, number]> = {
+  0: [0, 0, 0],  // C
+  1: [1, 1, 0],  // C♯/D♭
+  2: [1, 0, 0],  // D
+  3: [0, 1, 0],  // D♯/E♭
+  4: [0, 0, 0],  // E
+  5: [1, 0, 0],  // F
+  6: [0, 1, 0],  // F♯/G♭
+  7: [0, 0, 0],  // G
+  8: [0, 1, 1],  // G♯/A♭
+  9: [1, 1, 0],  // A
+  10: [1, 0, 0], // A♯/B♭
+  11: [0, 1, 0], // B
 };
 
 export type Fingering = [number, number, number];
@@ -24,8 +41,13 @@ export interface FingeringOption {
   label: string;
 }
 
+function registerForOctave(octave: number): Record<number, [number, number, number]> {
+  return octave >= 5 ? UPPER_REGISTER_FINGERINGS : LOWER_REGISTER_FINGERINGS;
+}
+
 export function fingeringForNote(note: SpelledNote): Fingering {
-  return FINGERINGS_BY_PITCH_CLASS[note.pitchClass] ?? [0, 0, 0];
+  const map = registerForOctave(note.octave);
+  return map[note.pitchClass] ?? [0, 0, 0];
 }
 
 export function isCorrectFingering(note: SpelledNote, valves: Fingering): boolean {

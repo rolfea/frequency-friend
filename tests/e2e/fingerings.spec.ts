@@ -24,7 +24,7 @@ test('after naming the pitch, asks for the fingering', async ({ page }) => {
 
   await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
   await expect(page.locator('fingering-diagram svg')).toBeVisible();
-  await expect(page.locator('.fingering-option')).toHaveCount(8);
+  await expect(page.locator('fingering-option')).toHaveCount(8);
 });
 
 test('selecting the correct fingering reports correct', async ({ page }) => {
@@ -43,8 +43,8 @@ test('selecting an incorrect fingering reports incorrect', async ({ page }) => {
   await expect(page.locator('.app-card__feedback')).toContainText('Correct');
   await expect(page.locator('.app-card__hint')).toHaveText('Now pick the fingering!');
 
-  // Pick a non-open diagram (valve 1).
-  await page.getByRole('button', { name: '1', exact: true }).click();
+  // Pick a non-open diagram (first pressed-valves option).
+  await page.getByRole('button', { name: 'Pressed valves' }).first().click();
 
   await expect(page.locator('.app-card__feedback')).toContainText('Incorrect fingering');
 });

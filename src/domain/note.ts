@@ -12,6 +12,7 @@ export interface SpelledNote {
   key: string;
   displayName: string;
   pitchClass: PitchClass;
+  octave: number;
   accidental: 'natural' | 'sharp' | 'flat';
 }
 
@@ -64,6 +65,7 @@ export function spellNote(
     key: `${ascii}${octave}`,
     displayName: `${display}${octave}`,
     pitchClass,
+    octave,
     accidental,
   };
 }
