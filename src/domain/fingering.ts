@@ -55,6 +55,6 @@ export function fingeringOptions(): FingeringOption[] {
   ];
   return combinations.map((valves) => ({
     valves,
-    label: formatFingering(valves),
+    label: formatFingering(valves) === 'Open' ? 'Open' : '',
   }));
 }

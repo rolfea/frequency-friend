@@ -1,4 +1,17 @@
 import type { Fingering } from '../domain/fingering.js';
+import { renderFingeringSvg } from './fingering-svg.js';
+
+const OPTION_PROPS = {
+  width: 60,
+  height: 100,
+  casingRx: 25,
+  casingRy: 25,
+  casingStroke: 3,
+  valveRadius: 11,
+  valveStroke: 2,
+  valveCy: [28, 50, 72] as [number, number, number],
+  classPrefix: 'fingering-option',
+};
 
 class FingeringOption extends HTMLElement {
   private valves: Fingering = [0, 0, 0];
@@ -20,20 +33,10 @@ class FingeringOption extends HTMLElement {
   }
 
   private render(): void {
-    const [v1, v2, v3] = this.valves;
-    const ariaLabel = this.label || `Valves ${this.valves.join('-')}`;
+    const ariaLabel = this.label || (this.valves.every((v) => v === 0) ? 'Open' : 'Pressed valves');
     this.innerHTML = `
       <button type="button" class="fingering-option" aria-label="${ariaLabel}">
-        <svg class="fingering-option__svg" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
-          <rect x="5" y="5" width="50" height="90" rx="25" ry="25"
-            class="fingering-option__casing" fill="none" stroke="currentColor" stroke-width="3" />
-          <circle cx="30" cy="28" r="11"
-            class="fingering-option__valve ${v1 ? 'fingering-option__valve--pressed' : ''}" />
-          <circle cx="30" cy="50" r="11"
-            class="fingering-option__valve ${v2 ? 'fingering-option__valve--pressed' : ''}" />
-          <circle cx="30" cy="72" r="11"
-            class="fingering-option__valve ${v3 ? 'fingering-option__valve--pressed' : ''}" />
-        </svg>
+        ${renderFingeringSvg(this.valves, OPTION_PROPS)}
       </button>
     `;
     this.querySelector('button')!.addEventListener('click', () => {

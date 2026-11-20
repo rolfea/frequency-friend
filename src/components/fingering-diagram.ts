@@ -1,23 +1,23 @@
 import type { Fingering } from '../domain/fingering.js';
+import { renderFingeringSvg } from './fingering-svg.js';
+
+const DIAGRAM_PROPS = {
+  width: 100,
+  height: 180,
+  casingRx: 40,
+  casingRy: 40,
+  casingStroke: 3,
+  valveRadius: 14,
+  valveStroke: 2,
+  valveCy: [50, 90, 130] as [number, number, number],
+  classPrefix: 'fingering-diagram',
+};
 
 class FingeringDiagram extends HTMLElement {
   private valves: SVGCircleElement[] = [];
 
   connectedCallback(): void {
-    this.innerHTML = `
-      <svg class="fingering-diagram" viewBox="0 0 100 180" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="80" height="160" rx="40" ry="40"
-          class="fingering-diagram__casing" fill="none" stroke="currentColor" stroke-width="3" />
-        <g class="fingering-diagram__valves">
-          <circle cx="50" cy="50" r="14" class="fingering-diagram__valve" />
-          <circle cx="50" cy="90" r="14" class="fingering-diagram__valve" />
-          <circle cx="50" cy="130" r="14" class="fingering-diagram__valve" />
-        </g>
-        <text x="50" y="54" text-anchor="middle" class="fingering-diagram__label" font-size="14">1</text>
-        <text x="50" y="94" text-anchor="middle" class="fingering-diagram__label" font-size="14">2</text>
-        <text x="50" y="134" text-anchor="middle" class="fingering-diagram__label" font-size="14">3</text>
-      </svg>
-    `;
+    this.innerHTML = renderFingeringSvg([0, 0, 0], DIAGRAM_PROPS);
     this.valves = Array.from(this.querySelectorAll('.fingering-diagram__valve'));
     this.setFingering([0, 0, 0]);
   }

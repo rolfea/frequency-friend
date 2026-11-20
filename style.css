@@ -142,11 +142,6 @@ body {
   fill: currentColor;
 }
 
-.fingering-diagram__label {
-  fill: #fff;
-  pointer-events: none;
-}
-
 .fingering-options__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));

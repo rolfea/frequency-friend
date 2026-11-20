@@ -47,8 +47,9 @@ describe('formatFingering', () => {
 
 describe('fingeringOptions', () => {
   it('includes all eight standard combinations', () => {
-    expect(fingeringOptions()).toHaveLength(8);
-    expect(fingeringOptions().map((o) => o.label)).toContain('Open');
-    expect(fingeringOptions().map((o) => o.label)).toContain('1+2+3');
+    const options = fingeringOptions();
+    expect(options).toHaveLength(8);
+    expect(options.map((o) => o.label)).toContain('Open');
+    expect(options.map((o) => o.valves.join(''))).toContain('111');
   });
 });
