@@ -12,6 +12,11 @@ export const DEFAULT_CONFIG: Config = {
   cardsPerSession: 10,
   sessionDurationMinutes: 5,
   showFingerings: false,
+  practiceMode: 'quiz',
+  longToneBeats: 2,
+  longToneTempo: 80,
+  longToneCentsTolerance: 50,
+  longToneMinDurationMs: 500,
 };
 
 export function loadConfig(): Config {
@@ -29,7 +34,16 @@ export function loadConfig(): Config {
     let sessionDurationMinutes = Number.isFinite(parsed.sessionDurationMinutes) ? parsed.sessionDurationMinutes : DEFAULT_CONFIG.sessionDurationMinutes;
     sessionDurationMinutes = Math.max(1, sessionDurationMinutes);
     const sessionMode = parsed.sessionMode === 'minutes' ? 'minutes' : 'cards';
+    const practiceMode = parsed.practiceMode === 'long-tone' ? 'long-tone' : 'quiz';
     const showFingerings = Boolean(parsed.showFingerings);
+    let longToneBeats = Number.isFinite(parsed.longToneBeats) ? parsed.longToneBeats : DEFAULT_CONFIG.longToneBeats;
+    longToneBeats = longToneBeats === 4 ? 4 : 2;
+    let longToneTempo = Number.isFinite(parsed.longToneTempo) ? parsed.longToneTempo : DEFAULT_CONFIG.longToneTempo;
+    longToneTempo = Math.max(40, Math.min(208, longToneTempo));
+    let longToneCentsTolerance = Number.isFinite(parsed.longToneCentsTolerance) ? parsed.longToneCentsTolerance : DEFAULT_CONFIG.longToneCentsTolerance;
+    longToneCentsTolerance = Math.max(5, Math.min(200, longToneCentsTolerance));
+    let longToneMinDurationMs = Number.isFinite(parsed.longToneMinDurationMs) ? parsed.longToneMinDurationMs : DEFAULT_CONFIG.longToneMinDurationMs;
+    longToneMinDurationMs = Math.max(100, longToneMinDurationMs);
     return {
       ...DEFAULT_CONFIG,
       ...parsed,
@@ -39,6 +53,11 @@ export function loadConfig(): Config {
       cardsPerSession,
       sessionDurationMinutes,
       showFingerings,
+      practiceMode,
+      longToneBeats,
+      longToneTempo,
+      longToneCentsTolerance,
+      longToneMinDurationMs,
     };
   } catch {
     return DEFAULT_CONFIG;

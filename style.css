@@ -38,12 +38,14 @@ body {
   color: #666;
 }
 
-.staff-display {
+.staff-display,
+.long-tone-card__staff {
   min-height: 160px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 
 .app-card__feedback {
   min-height: 1.5rem;
@@ -211,6 +213,61 @@ body {
   gap: 0.25rem;
 }
 
-.app-card__settings--hidden {
+.long-tone-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.long-tone-card__hint {
+  margin: 0;
+  font-size: 1.125rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.long-tone-card__timer {
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: center;
+}
+
+.long-tone-card__feedback {
+  min-height: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.long-tone-card__controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.long-tone-card__start,
+.long-tone-card__stop {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.long-tone-card__start:disabled,
+.long-tone-card__stop:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.app-card__quiz,
+.app-card__long-tone {
+  display: block;
+}
+
+.app-card__long-tone--hidden,
+.app-card__quiz--hidden {
   display: none;
 }
+

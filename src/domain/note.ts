@@ -24,6 +24,11 @@ export interface Config {
   cardsPerSession: number;
   sessionDurationMinutes: number;
   showFingerings: boolean;
+  practiceMode: 'quiz' | 'long-tone';
+  longToneBeats: number;
+  longToneTempo: number;
+  longToneCentsTolerance: number;
+  longToneMinDurationMs: number;
 }
 
 const SHARP_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];

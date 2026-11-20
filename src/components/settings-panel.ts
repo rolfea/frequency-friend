@@ -46,6 +46,32 @@ class SettingsPanel extends HTMLElement {
           </select>
         </label>
         <label class="settings-panel__field">
+          <span>Practice mode</span>
+          <select name="practiceMode" class="settings-panel__select">
+            <option value="quiz">Quiz</option>
+            <option value="long-tone">Long tone</option>
+          </select>
+        </label>
+        <label class="settings-panel__field settings-panel__field--long-tone">
+          <span>Count-in beats</span>
+          <select name="longToneBeats" class="settings-panel__select">
+            <option value="2">2</option>
+            <option value="4">4</option>
+          </select>
+        </label>
+        <label class="settings-panel__field settings-panel__field--long-tone">
+          <span>Count-in tempo (BPM)</span>
+          <input name="longToneTempo" type="number" min="40" max="208" class="settings-panel__number">
+        </label>
+        <label class="settings-panel__field settings-panel__field--long-tone">
+          <span>Tolerance (cents)</span>
+          <input name="longToneCentsTolerance" type="number" min="5" max="200" class="settings-panel__number">
+        </label>
+        <label class="settings-panel__field settings-panel__field--long-tone">
+          <span>Min hold time (ms)</span>
+          <input name="longToneMinDurationMs" type="number" min="100" class="settings-panel__number">
+        </label>
+        <label class="settings-panel__field">
           <span>Show trumpet fingerings</span>
           <input name="showFingerings" type="checkbox" class="settings-panel__checkbox">
         </label>
@@ -64,6 +90,7 @@ class SettingsPanel extends HTMLElement {
     sessionMode.addEventListener('change', () => this.updateFieldVisibility());
   }
 
+  // fallow-ignore-next-line unused-class-member
   setConfig(config: Config): void {
     this.config = config;
     const form = this.querySelector('form') as HTMLFormElement;
@@ -74,9 +101,17 @@ class SettingsPanel extends HTMLElement {
     (form.elements.namedItem('cardsPerSession') as HTMLInputElement).value = String(config.cardsPerSession);
     (form.elements.namedItem('sessionDurationMinutes') as HTMLSelectElement).value = String(config.sessionDurationMinutes);
     (form.elements.namedItem('showFingerings') as HTMLInputElement).checked = config.showFingerings;
+    (form.elements.namedItem('practiceMode') as HTMLSelectElement).value = config.practiceMode;
+    (form.elements.namedItem('longToneBeats') as HTMLSelectElement).value = String(config.longToneBeats);
+    (form.elements.namedItem('longToneTempo') as HTMLInputElement).value = String(config.longToneTempo);
+    (form.elements.namedItem('longToneCentsTolerance') as HTMLInputElement).value = String(config.longToneCentsTolerance);
+    (form.elements.namedItem('longToneMinDurationMs') as HTMLInputElement).value = String(config.longToneMinDurationMs);
+    const practiceMode = form.elements.namedItem('practiceMode') as HTMLSelectElement;
+    practiceMode.addEventListener('change', () => this.updateFieldVisibility());
     this.updateFieldVisibility();
   }
 
+  // fallow-ignore-next-line unused-class-member
   onSave(callback: (config: Config) => void): void {
     this.saveCallback = callback;
   }
@@ -99,6 +134,11 @@ class SettingsPanel extends HTMLElement {
     const minutesField = this.querySelector('.settings-panel__field--minutes') as HTMLElement;
     cardsField.style.display = mode === 'cards' ? '' : 'none';
     minutesField.style.display = mode === 'minutes' ? '' : 'none';
+
+    const practiceMode = (form.elements.namedItem('practiceMode') as HTMLSelectElement).value;
+    this.querySelectorAll('.settings-panel__field--long-tone').forEach((el) => {
+      (el as HTMLElement).style.display = practiceMode === 'long-tone' ? '' : 'none';
+    });
   }
 
   private readConfig(): Config {
@@ -123,6 +163,11 @@ class SettingsPanel extends HTMLElement {
       cardsPerSession,
       sessionDurationMinutes,
       showFingerings: (form.elements.namedItem('showFingerings') as HTMLInputElement).checked,
+      practiceMode: (form.elements.namedItem('practiceMode') as HTMLSelectElement).value as 'quiz' | 'long-tone',
+      longToneBeats: Number((form.elements.namedItem('longToneBeats') as HTMLSelectElement).value) as 2 | 4,
+      longToneTempo: Math.max(40, Math.min(208, Number((form.elements.namedItem('longToneTempo') as HTMLInputElement).value))),
+      longToneCentsTolerance: Math.max(5, Math.min(200, Number((form.elements.namedItem('longToneCentsTolerance') as HTMLInputElement).value))),
+      longToneMinDurationMs: Math.max(100, Number((form.elements.namedItem('longToneMinDurationMs') as HTMLInputElement).value)),
     };
   }
 }

@@ -17,6 +17,11 @@ describe('settings-panel', () => {
       cardsPerSession: 10,
       sessionDurationMinutes: 5,
       showFingerings: false,
+      practiceMode: 'quiz',
+      longToneBeats: 2,
+      longToneTempo: 80,
+      longToneCentsTolerance: 50,
+      longToneMinDurationMs: 500,
       ...overrides,
     };
   }

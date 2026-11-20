@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { loadConfig, saveConfig, loadProgress, saveProgress } from './storage.js';
+import { DEFAULT_CONFIG, loadConfig, saveConfig, loadProgress, saveProgress } from './storage.js';
 
 describe('config storage', () => {
   beforeEach(() => {
@@ -7,18 +7,25 @@ describe('config storage', () => {
   });
 
   it('returns defaults when nothing is stored', () => {
-    const config = loadConfig();
-    expect(config.floorMidi).toBe(60);
-    expect(config.ceilingMidi).toBe(77);
-    expect(config.includeAccidentals).toBe(false);
-    expect(config.sessionMode).toBe('cards');
-    expect(config.cardsPerSession).toBe(10);
-    expect(config.sessionDurationMinutes).toBe(5);
-    expect(config.showFingerings).toBe(false);
+    expect(loadConfig()).toEqual(DEFAULT_CONFIG);
   });
 
   it('round-trips config changes', () => {
-    const config = { floorMidi: 55, ceilingMidi: 72, includeAccidentals: true, sessionMode: 'minutes' as const, cardsPerSession: 15, sessionDurationMinutes: 3, showFingerings: true };
+    const config = {
+      ...DEFAULT_CONFIG,
+      floorMidi: 55,
+      ceilingMidi: 72,
+      includeAccidentals: true,
+      sessionMode: 'minutes' as const,
+      cardsPerSession: 15,
+      sessionDurationMinutes: 3,
+      showFingerings: true,
+      practiceMode: 'long-tone' as const,
+      longToneBeats: 4,
+      longToneTempo: 100,
+      longToneCentsTolerance: 25,
+      longToneMinDurationMs: 750,
+    };
     saveConfig(config);
     expect(loadConfig()).toEqual(config);
   });
@@ -34,6 +41,23 @@ describe('config storage', () => {
   it('clamps cardsPerSession to at least 1', () => {
     localStorage.setItem('frequency-friend:config', JSON.stringify({ cardsPerSession: 0 }));
     expect(loadConfig().cardsPerSession).toBe(1);
+  });
+
+  it('clamps long-tone settings', () => {
+    localStorage.setItem(
+      'frequency-friend:config',
+      JSON.stringify({
+        longToneBeats: 6,
+        longToneTempo: 300,
+        longToneCentsTolerance: 300,
+        longToneMinDurationMs: -50,
+      }),
+    );
+    const config = loadConfig();
+    expect(config.longToneBeats).toBe(2);
+    expect(config.longToneTempo).toBe(208);
+    expect(config.longToneCentsTolerance).toBe(200);
+    expect(config.longToneMinDurationMs).toBe(100);
   });
 });
 

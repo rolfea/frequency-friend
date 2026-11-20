@@ -8,11 +8,13 @@ import type AnswerButtons from './answer-buttons.js';
 import type FingeringOptions from './fingering-options.js';
 import type FingeringDiagram from './fingering-diagram.js';
 import type SettingsPanel from './settings-panel.js';
+import type LongToneCard from './long-tone-card.js';
 import './staff-display.js';
 import './answer-buttons.js';
 import './fingering-options.js';
 import './fingering-diagram.js';
 import './settings-panel.js';
+import './long-tone-card.js';
 
 class AppCard extends HTMLElement {
   private config: Config = loadConfig();
@@ -39,16 +41,23 @@ class AppCard extends HTMLElement {
           <button class="app-card__settings-toggle" type="button">Settings</button>
         </header>
         <div class="app-card__stats"></div>
-        <p class="app-card__hint" aria-live="polite">Name the pitch!</p>
-        <staff-display class="app-card__staff"></staff-display>
-        <div class="app-card__feedback" aria-live="polite"></div>
-        <answer-buttons class="app-card__answers"></answer-buttons>
-        <fingering-diagram class="app-card__diagram app-card__diagram--hidden"></fingering-diagram>
-        <fingering-options class="app-card__fingering-options app-card__fingering-options--hidden"></fingering-options>
+        <div class="app-card__stage">
+          <div class="app-card__quiz">
+            <p class="app-card__hint" aria-live="polite">Name the pitch!</p>
+            <staff-display class="app-card__staff"></staff-display>
+            <div class="app-card__feedback" aria-live="polite"></div>
+            <answer-buttons class="app-card__answers"></answer-buttons>
+            <fingering-diagram class="app-card__diagram app-card__diagram--hidden"></fingering-diagram>
+            <fingering-options class="app-card__fingering-options app-card__fingering-options--hidden"></fingering-options>
+          </div>
+          <long-tone-card class="app-card__long-tone app-card__long-tone--hidden"></long-tone-card>
+        </div>
         <settings-panel class="app-card__settings app-card__settings--hidden"></settings-panel>
       </section>
     `;
 
+    const quizStage = this.querySelector('.app-card__quiz')!;
+    const longToneStage = this.querySelector('.app-card__long-tone')! as unknown as LongToneCard;
     const staff = this.querySelector('staff-display')! as unknown as StaffDisplay;
     const answers = this.querySelector('answer-buttons')! as unknown as AnswerButtons;
     const diagram = this.querySelector('fingering-diagram')! as unknown as FingeringDiagram;
@@ -59,6 +68,7 @@ class AppCard extends HTMLElement {
 
     this.updateAnswerButtons();
     fingeringOptionsEl.setOptions();
+    longToneStage.setConfig(this.config);
 
     answers.onSelect((pitchClass: PitchClass) => {
       const now = new Date();
@@ -78,7 +88,7 @@ class AppCard extends HTMLElement {
         : `Incorrect. The correct answer was ${correctName}.`;
       feedback.className = `app-card__feedback app-card__feedback--${result.wasCorrect ? 'correct' : 'incorrect'}`;
 
-      const hint = this.querySelector('.app-card__hint');
+      const hint = quizStage.querySelector('.app-card__hint');
       if (hint) {
         hint.classList.add('app-card__hint--hidden');
       }
@@ -129,6 +139,35 @@ class AppCard extends HTMLElement {
       }, 2000);
     });
 
+    longToneStage.onDone((durationMs: number) => {
+      // Mark long-tone attempts as correct so the session advances.
+      const now = new Date();
+      const note = currentNote(this.session);
+      if (!note) {
+        this.showSummary();
+        return;
+      }
+      const result = answer(this.session, this.progress, note.pitchClass, now);
+      if (!result) {
+        this.showSummary();
+        return;
+      }
+      this.session = result.updatedSession;
+      this.progress = result.updatedProgress;
+      saveProgress(this.progress);
+      feedback.textContent = `Held for ${(durationMs / 1000).toFixed(2)}s.`;
+      feedback.className = 'app-card__feedback app-card__feedback--correct';
+
+      setTimeout(() => {
+        if (currentNote(this.session)) {
+          this.showCurrentNote();
+          feedback.textContent = '';
+        } else {
+          this.showSummary();
+        }
+      }, 2000);
+    });
+
     settingsPanel.setConfig(this.config);
     settingsPanel.onSave((config) => {
       this.config = config;
@@ -169,13 +208,36 @@ class AppCard extends HTMLElement {
     }
   }
 
+  private showLongToneStage(note: SpelledNote): void {
+    const quizStage = this.querySelector('.app-card__quiz') as HTMLElement | null;
+    const longToneStage = this.querySelector('.app-card__long-tone') as HTMLElement | null;
+    if (quizStage) quizStage.classList.add('app-card__quiz--hidden');
+    if (longToneStage) {
+      longToneStage.classList.remove('app-card__long-tone--hidden');
+      (longToneStage as unknown as LongToneCard).setConfig(this.config);
+      (longToneStage as unknown as LongToneCard).setNote(note);
+    }
+    this.updateStats();
+    this.startTimer();
+  }
+
   private showCurrentNote(): void {
     const note = currentNote(this.session);
     if (!note) {
       this.showSummary();
       return;
     }
+
+    if (this.config.practiceMode === 'long-tone') {
+      this.showLongToneStage(note);
+      return;
+    }
+
     this.phase = 'pitch';
+    const longToneStage = this.querySelector('.app-card__long-tone') as HTMLElement | null;
+    const quizStage = this.querySelector('.app-card__quiz') as HTMLElement | null;
+    if (longToneStage) longToneStage.classList.add('app-card__long-tone--hidden');
+    if (quizStage) quizStage.classList.remove('app-card__quiz--hidden');
     const staff = this.querySelector('staff-display') as unknown as StaffDisplay;
     staff.setNote(note);
     this.updateAnswerButtons();
