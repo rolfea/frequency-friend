@@ -2,21 +2,31 @@ export interface Metronome {
   audioContext: AudioContext;
   tempo: number;
   beats: number;
+  onClick: ((beatIndex: number) => void) | null;
   onDone: () => void;
 }
 
-export function createMetronome(audioContext: AudioContext, tempo: number, beats: number, onDone: () => void): Metronome {
-  return { audioContext, tempo, beats, onDone };
+export function createMetronome(
+  audioContext: AudioContext,
+  tempo: number,
+  beats: number,
+  onDone: () => void,
+  onClick?: (beatIndex: number) => void,
+): Metronome {
+  return { audioContext, tempo, beats, onClick: onClick ?? null, onDone };
 }
 
 export function startMetronome(metronome: Metronome): void {
-  const { audioContext, tempo, beats, onDone } = metronome;
+  const { audioContext, tempo, beats, onClick, onDone } = metronome;
   const beatSeconds = 60 / tempo;
   const now = audioContext.currentTime;
 
   for (let i = 0; i < beats; i++) {
     const time = now + i * beatSeconds;
     playClick(metronome.audioContext, time);
+    if (onClick) {
+      setTimeout(() => onClick(i), (time - audioContext.currentTime) * 1000);
+    }
   }
 
   const lastClickTime = now + (beats - 1) * beatSeconds;

@@ -53,4 +53,17 @@ describe('metronome', () => {
     const starts = (ctx as any).scheduled.filter((e: { type: string }) => e.type === 'start');
     expect(starts.map((e: { time: number }) => e.time)).toEqual([0, 0.5]);
   });
+
+  it('fires onClick for each beat', () => {
+    const ctx = createMockAudioContext();
+    const done = vi.fn();
+    const click = vi.fn();
+    const metronome = createMetronome(ctx, 120, 3, done, click);
+
+    startMetronome(metronome);
+    vi.advanceTimersByTime(1000);
+
+    expect(click).toHaveBeenCalledTimes(3);
+    expect(click).toHaveBeenLastCalledWith(2);
+  });
 });

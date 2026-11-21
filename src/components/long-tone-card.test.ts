@@ -26,4 +26,13 @@ describe('long-tone-card', () => {
     el.setNote(spellNote(64, 'natural'));
     expect(el.querySelector('.long-tone-card__hint')?.textContent).toContain('E4');
   });
+
+  it('renders waveform canvas and count-in dots', () => {
+    document.body.innerHTML = '<long-tone-card></long-tone-card>';
+    const el = document.querySelector('long-tone-card')! as unknown as LongToneCard;
+    el.setConfig(DEFAULT_CONFIG);
+    el.setNote(spellNote(60, 'natural'));
+    expect(el.querySelector('.long-tone-card__waveform')).not.toBeNull();
+    expect(el.querySelectorAll('.long-tone-card__count-in-dot')).toHaveLength(DEFAULT_CONFIG.longToneBeats);
+  });
 });
