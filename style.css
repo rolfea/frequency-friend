@@ -227,6 +227,46 @@ body {
   color: var(--color-text);
 }
 
+.long-tone-card__count-in {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+.long-tone-card__count-in--hidden {
+  display: none;
+}
+
+.long-tone-card__count-in-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: background 0.15s ease;
+}
+
+.long-tone-card__count-in-dot--active {
+  background: var(--color-accent);
+  transform: scale(1.5);
+  transition: transform 0.25s ease-out;
+}
+
+
+.long-tone-card__waveform {
+  width: 100%;
+  max-width: 300px;
+  height: 80px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.long-tone-card__waveform--hidden {
+  display: none;
+}
+
 .long-tone-card__timer {
   font-size: 2rem;
   font-variant-numeric: tabular-nums;
@@ -266,8 +306,16 @@ body {
   display: block;
 }
 
+.app-card__quiz,
+.app-card__long-tone {
+  display: block;
+}
+
 .app-card__long-tone--hidden,
 .app-card__quiz--hidden {
   display: none;
 }
+
+
+
 

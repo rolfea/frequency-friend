@@ -41,11 +41,17 @@ class LongToneCard extends HTMLElement {
     const targetName = this.note?.displayName ?? 'Select a note';
     const isRunning = this.state.phase === 'count-in' || this.state.phase === 'listening';
     const seconds = this.formatSeconds();
+    const showCountIn = this.state.phase === 'count-in';
+    const showWaveform = isRunning;
 
     this.innerHTML = `
       <section class="long-tone-card">
         <p class="long-tone-card__hint" aria-live="polite">Play a long tone on ${targetName}</p>
         <staff-display class="long-tone-card__staff"></staff-display>
+        <div class="long-tone-card__count-in ${showCountIn ? '' : 'long-tone-card__count-in--hidden'}" aria-hidden="true">
+          ${this.countInDots()}
+        </div>
+        <canvas class="long-tone-card__waveform ${showWaveform ? '' : 'long-tone-card__waveform--hidden'}" width="300" height="80"></canvas>
         <div class="long-tone-card__timer">${seconds}s</div>
         <div class="long-tone-card__feedback" aria-live="polite"></div>
         <div class="long-tone-card__controls">
@@ -64,6 +70,20 @@ class LongToneCard extends HTMLElement {
 
     this.querySelector('.long-tone-card__start')?.addEventListener('click', () => this.start());
     this.querySelector('.long-tone-card__stop')?.addEventListener('click', () => this.stop());
+  }
+
+  private countInDots(): string {
+    const beats = this.config?.longToneBeats ?? 2;
+    return Array.from({ length: beats }, (_, i) =>
+      `<span class="long-tone-card__count-in-dot" data-beat="${i}"></span>`,
+    ).join('');
+  }
+
+  private pulseCountIn(beatIndex: number): void {
+    const dot = this.querySelector(`.long-tone-card__count-in-dot[data-beat="${beatIndex}"]`);
+    if (!dot) return;
+    dot.classList.add('long-tone-card__count-in-dot--active');
+    setTimeout(() => dot.classList.remove('long-tone-card__count-in-dot--active'), 250);
   }
 
   private formatSeconds(): string {
@@ -97,11 +117,15 @@ class LongToneCard extends HTMLElement {
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
 
+      // Start drawing the waveform immediately so the user sees mic activity.
+      this.rafHandle = requestAnimationFrame(() => this.tick());
+
       const metronome = createMetronome(
         this.audioContext,
         this.config.longToneTempo,
         this.config.longToneBeats,
         () => this.onCountInDone(),
+        (beatIndex) => this.pulseCountIn(beatIndex),
       );
       startMetronome(metronome);
     } catch (err) {
@@ -115,27 +139,72 @@ class LongToneCard extends HTMLElement {
     if (this.requestStop) return;
     this.state = startListening(this.state, performance.now());
     this.render();
-    this.rafHandle = requestAnimationFrame(() => this.sample());
   }
 
-  private sample(): void {
-    if (this.requestStop || this.state.phase !== 'listening' || !this.analyser || !this.note || !this.config) {
-      return;
+  private tick(): void {
+    if (this.requestStop || !this.analyser) return;
+
+    const canvas = this.querySelector('.long-tone-card__waveform') as HTMLCanvasElement | null;
+    if (canvas) {
+      this.drawWaveform(canvas);
     }
 
-    const now = performance.now();
-    const buffer = new Float32Array(this.analyser.fftSize);
-    this.analyser.getFloatTimeDomainData(buffer);
+    if (this.state.phase === 'listening' && this.note && this.config) {
+      const now = performance.now();
+      const buffer = new Float32Array(this.analyser.fftSize);
+      this.analyser.getFloatTimeDomainData(buffer);
 
-    const sampleRate = this.analyser.context.sampleRate;
-    const detected = autocorrelationPitch(buffer, sampleRate);
-    const target = midiToFrequency(this.note.midi, true); // transpose for Bb trumpet
-    const inTune = isPitchInTune(detected, target, this.config.longToneCentsTolerance);
+      const sampleRate = this.analyser.context.sampleRate;
+      const detected = autocorrelationPitch(buffer, sampleRate);
+      const target = midiToFrequency(this.note.midi, true); // transpose for Bb trumpet
+      const inTune = isPitchInTune(detected, target, this.config.longToneCentsTolerance);
 
-    this.state = updateHold(this.state, now, inTune, this.config.longToneMinDurationMs);
-    this.updateTimer(now);
+      this.state = updateHold(this.state, now, inTune, this.config.longToneMinDurationMs);
+      this.updateTimer(now);
+    }
 
-    this.rafHandle = requestAnimationFrame(() => this.sample());
+    this.rafHandle = requestAnimationFrame(() => this.tick());
+  }
+
+  private drawWaveform(canvas: HTMLCanvasElement): void {
+    if (!this.analyser) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const bufferLength = this.analyser.fftSize;
+    const dataArray = new Float32Array(bufferLength);
+    this.analyser.getFloatTimeDomainData(dataArray);
+
+    const hasData = dataArray.some(v => Math.abs(v) > 0.001);
+    if (!hasData) {
+        // console.log('Waveform data is empty');
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ff0000';
+    ctx.beginPath();
+
+    const sliceWidth = width / bufferLength;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] ?? 0;
+      // Amplify signal for better visibility
+      const y = height / 2 + (v * height * 5);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      x += sliceWidth;
+    }
+
+    ctx.stroke();
   }
 
   private updateTimer(now: number): void {
