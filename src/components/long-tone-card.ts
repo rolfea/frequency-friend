@@ -1,7 +1,7 @@
 import type { Config, SpelledNote } from '../domain/note.js';
 import { createLongToneState, currentHoldMs, startCountIn, startListening, stopLongTone, updateHold, type LongToneState } from '../domain/long-tone.js';
 import { createMetronome, startMetronome } from '../domain/metronome.js';
-import { autocorrelationPitch, isPitchInTune, midiToFrequency } from '../domain/tuner.js';
+import { autocorrelationPitch, FrequencyBuffer, midiToFrequency, readTuner, type TunerReading } from '../domain/tuner.js';
 import './staff-display.js';
 import type StaffDisplay from './staff-display.js';
 
@@ -15,6 +15,7 @@ class LongToneCard extends HTMLElement {
   private analyser: AnalyserNode | null = null;
   private mediaStream: MediaStream | null = null;
   private rafHandle: number | null = null;
+  private frequencyBuffer = new FrequencyBuffer(8);
   private doneCallback: ((durationMs: number) => void) | null = null;
   private requestStop = false;
 
@@ -39,26 +40,23 @@ class LongToneCard extends HTMLElement {
 
   private render(): void {
     const targetName = this.note?.displayName ?? 'Select a note';
-    const isRunning = this.state.phase === 'count-in' || this.state.phase === 'listening';
-    const seconds = this.formatSeconds();
-    const showCountIn = this.state.phase === 'count-in';
-    const showWaveform = isRunning;
 
     this.innerHTML = `
       <section class="long-tone-card">
         <p class="long-tone-card__hint" aria-live="polite">Play a long tone on ${targetName}</p>
         <staff-display class="long-tone-card__staff"></staff-display>
-        <div class="long-tone-card__count-in ${showCountIn ? '' : 'long-tone-card__count-in--hidden'}" aria-hidden="true">
+        <div class="long-tone-card__count-in ${this.countInClass()}" aria-hidden="true">
           ${this.countInDots()}
         </div>
-        <canvas class="long-tone-card__waveform ${showWaveform ? '' : 'long-tone-card__waveform--hidden'}" width="300" height="80"></canvas>
-        <div class="long-tone-card__timer">${seconds}s</div>
+        <canvas class="long-tone-card__waveform ${this.waveformClass()}" width="300" height="80"></canvas>
+        <div class="long-tone-card__timer">${this.formatSeconds()}s</div>
+        ${this.tunerMarkup()}
         <div class="long-tone-card__feedback" aria-live="polite"></div>
         <div class="long-tone-card__controls">
-          <button type="button" class="long-tone-card__start" ${isRunning ? 'disabled' : ''}>
-            ${this.startButtonLabel(isRunning)}
+          <button type="button" class="long-tone-card__start" ${this.startDisabled()}>
+            ${this.startButtonLabel()}
           </button>
-          <button type="button" class="long-tone-card__stop" ${!isRunning ? 'disabled' : ''}>Stop</button>
+          <button type="button" class="long-tone-card__stop" ${this.stopDisabled()}>Stop</button>
         </div>
       </section>
     `;
@@ -70,6 +68,40 @@ class LongToneCard extends HTMLElement {
 
     this.querySelector('.long-tone-card__start')?.addEventListener('click', () => this.start());
     this.querySelector('.long-tone-card__stop')?.addEventListener('click', () => this.stop());
+  }
+
+  private isRunning(): boolean {
+    return this.state.phase === 'count-in' || this.state.phase === 'listening';
+  }
+
+  private countInClass(): string {
+    return this.state.phase === 'count-in' ? '' : 'long-tone-card__count-in--hidden';
+  }
+
+  private waveformClass(): string {
+    return this.isRunning() ? '' : 'long-tone-card__waveform--hidden';
+  }
+
+  private startDisabled(): string {
+    return this.isRunning() ? 'disabled' : '';
+  }
+
+  private stopDisabled(): string {
+    return this.isRunning() ? '' : 'disabled';
+  }
+
+  private tunerMarkup(): string {
+    const hidden = this.state.phase !== 'listening' ? 'long-tone-card__tuner--hidden' : '';
+    return `
+      <div class="long-tone-card__tuner ${hidden}">
+        <div class="long-tone-card__tuner-reading" aria-live="polite">—</div>
+        <div class="long-tone-card__cents-meter">
+          <div class="long-tone-card__cents-zero"></div>
+          <div class="long-tone-card__cents-bar"></div>
+        </div>
+        <div class="long-tone-card__cents-label">cents</div>
+      </div>
+    `;
   }
 
   private countInDots(): string {
@@ -91,8 +123,8 @@ class LongToneCard extends HTMLElement {
     return '0.00';
   }
 
-  private startButtonLabel(isRunning: boolean): string {
-    if (isRunning) return 'Listening...';
+  private startButtonLabel(): string {
+    if (this.isRunning()) return 'Listening...';
     if (this.state.phase === 'done') return 'Try again';
     return 'Start';
   }
@@ -111,6 +143,7 @@ class LongToneCard extends HTMLElement {
 
     try {
       this.audioContext = new AudioContext();
+      this.frequencyBuffer = new FrequencyBuffer(8);
       this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const source = this.audioContext.createMediaStreamSource(this.mediaStream);
       this.analyser = this.audioContext.createAnalyser();
@@ -157,13 +190,19 @@ class LongToneCard extends HTMLElement {
       const sampleRate = this.analyser.context.sampleRate;
       const detected = autocorrelationPitch(buffer, sampleRate);
       const target = midiToFrequency(this.note.midi, true); // transpose for Bb trumpet
-      const inTune = isPitchInTune(detected, target, this.config.longToneCentsTolerance);
+      const reading = readTuner(detected, target, this.config.longToneCentsTolerance, this.frequencyBuffer);
 
-      this.state = updateHold(this.state, now, inTune, this.config.longToneMinDurationMs);
+      this.state = updateHold(this.state, now, reading.inTune, this.config.longToneMinDurationMs);
       this.updateTimer(now);
+      this.updateTuner(reading);
+      this.updateInTuneUi(reading.inTune);
     }
 
     this.rafHandle = requestAnimationFrame(() => this.tick());
+  }
+
+  private updateInTuneUi(inTune: boolean): void {
+    this.classList.toggle('long-tone-card--in-tune', inTune);
   }
 
   private drawWaveform(canvas: HTMLCanvasElement): void {
@@ -177,16 +216,11 @@ class LongToneCard extends HTMLElement {
     const dataArray = new Float32Array(bufferLength);
     this.analyser.getFloatTimeDomainData(dataArray);
 
-    const hasData = dataArray.some(v => Math.abs(v) > 0.001);
-    if (!hasData) {
-        // console.log('Waveform data is empty');
-    }
-
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
     ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ff0000';
+    ctx.strokeStyle = this.classList.contains('long-tone-card--in-tune') ? 'var(--color-correct)' : 'var(--color-accent)';
     ctx.beginPath();
 
     const sliceWidth = width / bufferLength;
@@ -212,6 +246,27 @@ class LongToneCard extends HTMLElement {
     const holdMs = currentHoldMs(this.state, now, this.config.longToneMinDurationMs);
     const timerEl = this.querySelector('.long-tone-card__timer');
     if (timerEl) timerEl.textContent = `${(holdMs / 1000).toFixed(2)}s`;
+  }
+
+  private updateTuner(reading: TunerReading): void {
+    const readingEl = this.querySelector('.long-tone-card__tuner-reading');
+    const bar = this.querySelector('.long-tone-card__cents-bar') as HTMLElement | null;
+    if (!readingEl || !bar) return;
+
+    if (reading.frequency == null || reading.cents == null) {
+      readingEl.textContent = '—';
+      bar.style.width = '0%';
+      bar.style.left = '50%';
+      bar.classList.remove('long-tone-card__cents-bar--in-tune');
+      return;
+    }
+
+    const cents = Math.max(-100, Math.min(100, reading.cents));
+    const percent = 50 + cents / 2;
+    readingEl.textContent = `${reading.noteName} · ${reading.frequency.toFixed(1)} Hz · ${Math.round(reading.cents)} cents`;
+    bar.style.width = '4px';
+    bar.style.left = `${percent}%`;
+    bar.classList.toggle('long-tone-card__cents-bar--in-tune', reading.inTune);
   }
 
   private stop(): void {

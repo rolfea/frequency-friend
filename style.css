@@ -254,11 +254,19 @@ body {
 }
 
 
+.long-tone-card--in-tune .long-tone-card__timer {
+  color: var(--color-correct);
+}
+
+.long-tone-card--in-tune .long-tone-card__waveform {
+  border-color: var(--color-correct);
+}
+
 .long-tone-card__waveform {
   width: 100%;
   max-width: 300px;
   height: 80px;
-  border: 1px solid #e5e7eb;
+  border: 2px solid var(--color-accent);
   border-radius: 0.25rem;
   background: #fff;
 }
@@ -301,9 +309,68 @@ body {
   cursor: default;
 }
 
-.app-card__quiz,
-.app-card__long-tone {
-  display: block;
+.long-tone-card__tuner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.long-tone-card__tuner--hidden {
+  display: none;
+}
+
+.long-tone-card__tuner-reading {
+  min-height: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.long-tone-card__cents-meter {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(to right, #dc2626, #d1d5db 50%, #16a34a 50%, #d1d5db 75%, #dc2626);
+  overflow: hidden;
+}
+
+.long-tone-card__cents-zero {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #1a1a1a;
+  transform: translateX(-50%);
+}
+
+.long-tone-card__cents-bar {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 4px;
+  border-radius: 2px;
+  background: #1a1a1a;
+  transform: translateX(-50%);
+  transition: left 0.1s ease;
+}
+
+.long-tone-card__cents-bar--in-tune {
+  background: var(--color-correct);
+}
+
+.long-tone-card__cents-label {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.app-card__settings--hidden {
+  display: none;
 }
 
 .app-card__quiz,
@@ -315,7 +382,3 @@ body {
 .app-card__quiz--hidden {
   display: none;
 }
-
-
-
-
