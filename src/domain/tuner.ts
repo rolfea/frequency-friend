@@ -1,10 +1,80 @@
-export function midiToFrequency(midi: number, transposeForBbTrumpet: boolean): number {
-  const transposedMidi = transposeForBbTrumpet ? midi - 2 : midi;
-  return 440 * Math.pow(2, (transposedMidi - 69) / 12);
+import { pitchClassToName, type PitchClass } from './note.js';
+import { TRANSPOSITIONS, type Transposition } from './transposition.js';
+
+export function midiToFrequency(midi: number, transposition?: Transposition): number {
+  const semitones = transposition?.semitones ?? 0;
+  return 440 * Math.pow(2, (midi + semitones - 69) / 12);
 }
 
 export function centsDifference(detected: number, target: number): number {
   return 1200 * Math.log2(detected / target);
+}
+
+export function frequencyToMidi(frequency: number, a4 = 440): number {
+  return 69 + 12 * Math.log2(frequency / a4);
+}
+
+export function noteNameFromFrequency(frequency: number, transposition?: Transposition, a4 = 440): string {
+  const midi = Math.round(frequencyToMidi(frequency, a4));
+  const semitones = transposition ? -transposition.semitones : 0;
+  const transposedMidi = midi + semitones;
+  const pitchClass = (transposedMidi % 12) as PitchClass;
+  const octave = Math.floor(transposedMidi / 12) - 1;
+  return `${pitchClassToName(pitchClass, true)}${octave}`;
+}
+
+export class FrequencyBuffer {
+  private readonly capacity: number;
+  private readonly values: number[] = [];
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+  }
+
+  add(value: number | null): number | null {
+    if (value == null) return this.median();
+    this.values.push(value);
+    if (this.values.length > this.capacity) {
+      this.values.shift();
+    }
+    return this.median();
+  }
+
+  median(): number | null {
+    if (this.values.length === 0) return null;
+    const sorted = [...this.values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 1
+      ? sorted[mid]!
+      : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  }
+}
+
+export interface TunerReading {
+  frequency: number | null;
+  noteName: string | null;
+  cents: number | null;
+  inTune: boolean;
+}
+
+export function readTuner(
+  detected: number | null,
+  target: number,
+  toleranceCents: number,
+  buffer: FrequencyBuffer,
+  transposition?: Transposition,
+): TunerReading {
+  const frequency = buffer.add(detected);
+  if (frequency == null) {
+    return { frequency: null, noteName: null, cents: null, inTune: false };
+  }
+  const cents = centsDifference(frequency, target);
+  return {
+    frequency,
+    noteName: noteNameFromFrequency(frequency, transposition),
+    cents,
+    inTune: Math.abs(cents) <= toleranceCents,
+  };
 }
 
 export function autocorrelationPitch(samples: Float32Array, sampleRate: number): number | null {

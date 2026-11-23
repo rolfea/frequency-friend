@@ -1,3 +1,4 @@
+import { TRANSPOSITIONS } from '../domain/transposition.js';
 import type { Config, SpelledNote } from '../domain/note.js';
 import { createLongToneState, currentHoldMs, startCountIn, startListening, stopLongTone, updateHold, type LongToneState } from '../domain/long-tone.js';
 import { createMetronome, startMetronome } from '../domain/metronome.js';
@@ -189,8 +190,9 @@ class LongToneCard extends HTMLElement {
 
       const sampleRate = this.analyser.context.sampleRate;
       const detected = autocorrelationPitch(buffer, sampleRate);
-      const target = midiToFrequency(this.note.midi, true); // transpose for Bb trumpet
-      const reading = readTuner(detected, target, this.config.longToneCentsTolerance, this.frequencyBuffer);
+// ...
+      const target = midiToFrequency(this.note.midi, TRANSPOSITIONS.BbTrumpet);
+      const reading = readTuner(detected, target, this.config.longToneCentsTolerance, this.frequencyBuffer, TRANSPOSITIONS.BbTrumpet);
 
       this.state = updateHold(this.state, now, reading.inTune, this.config.longToneMinDurationMs);
       this.updateTimer(now);

@@ -1,3 +1,4 @@
+import { TRANSPOSITIONS } from './transposition.js';
 import { describe, expect, it } from 'vitest';
 import { autocorrelationPitch, centsDifference, isPitchInTune, midiToFrequency } from './tuner.js';
 
@@ -11,11 +12,11 @@ function generateSine(frequency: number, sampleRate: number, durationSeconds: nu
 
 describe('midiToFrequency', () => {
   it('returns A440 for A4', () => {
-    expect(midiToFrequency(69, false)).toBeCloseTo(440, 1);
+    expect(midiToFrequency(69)).toBeCloseTo(440, 1);
   });
 
   it('transposes down a whole step for Bb trumpet', () => {
-    expect(midiToFrequency(69, true)).toBeCloseTo(391.995, 1); // G4
+    expect(midiToFrequency(69, TRANSPOSITIONS.BbTrumpet)).toBeCloseTo(391.995, 1); // G4
   });
 });
 

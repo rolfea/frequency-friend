@@ -339,29 +339,42 @@ body {
   overflow: hidden;
 }
 
+.long-tone-card__cents-meter {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  height: 20px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
 .long-tone-card__cents-zero {
   position: absolute;
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: #1a1a1a;
+  width: 4px;
+  background: #9ca3af;
   transform: translateX(-50%);
 }
 
 .long-tone-card__cents-bar {
   position: absolute;
-  top: 1px;
-  bottom: 1px;
-  width: 4px;
-  border-radius: 2px;
-  background: #1a1a1a;
+  top: 4px;
+  bottom: 4px;
+  width: 8px;
+  border-radius: 4px;
+  background: var(--color-accent);
   transform: translateX(-50%);
   transition: left 0.1s ease;
 }
 
 .long-tone-card__cents-bar--in-tune {
   background: var(--color-correct);
+  width: 16px;
+  border-radius: 8px;
 }
 
 .long-tone-card__cents-label {
